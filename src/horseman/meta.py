@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from horseman.responder import reply
 
 
-class BaseOverhead(ABC):
+class Overhead(ABC):
 
     @abstractmethod
     def set_data(self, data):
