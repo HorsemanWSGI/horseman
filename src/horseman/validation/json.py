@@ -15,12 +15,12 @@ class JSONSchema:
         self.schema = json.loads(schema_string)
 
     @classmethod
-    def create_from_string(cls, string):
+    def from_string(cls, string):
         schema = json.loads(string)
         return cls(schema, string)
 
     @classmethod
-    def create_from_json(cls, schema):
+    def from_dict(cls, schema):
         string = json.dumps(schema)
         return cls(schema, string)
 
@@ -42,16 +42,21 @@ class JSONSchema:
     def __call__(self, method):
         @wraps(method)
         def validate_method(overhead):
-            request = Request(overhead.environ)
-            
-            if request.content_type != 'application/json':
+            if 'application/json' not in overhead.environ.get('CONTENT_TYPE'):
                 return reply(406, text="Content type must be application/json")
 
-            errors = self.validate_object(request.json)
+            try:
+                data = json.load(overhead.environ['wsgi.input'])
+            except ValueError:
+                return reply(
+                    400, text='Invalid json data.',
+                    content_type='application/json')
+
+            errors = self.validate_object(data)
             if errors:
                 return reply(
                     400, text=json.dumps(errors),
                     content_type='application/json')
-            overhead.set_data(request.json)
-            return method(inst, environ, overhead)
+            overhead.set_data(data)
+            return method(overhead)
         return validate_method
