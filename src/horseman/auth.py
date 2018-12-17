@@ -18,7 +18,7 @@ class authenticate:
                         environ['auth_payload'] = payload
                         return app(environ, start_response)
                     else:
-                        return reply(code, text=payload)(
+                        return reply(code, body=payload)(
                             environ, start_response)
             return reply(401)(environ, start_response)
         return method_watchdog
