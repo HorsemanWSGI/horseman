@@ -1,3 +1,6 @@
+from horseman.response import Response
+
+
 class authenticate:
 
     def __init__(self, checkers, **conf):
@@ -18,7 +21,7 @@ class authenticate:
                         environ['auth_payload'] = payload
                         return app(environ, start_response)
                     else:
-                        return reply(code, body=payload)(
+                        return Response.create(code, body)(
                             environ, start_response)
-            return reply(401)(environ, start_response)
+            return Response.create(401)(environ, start_response)
         return method_watchdog

@@ -13,20 +13,20 @@ except ImportError:
     from json.decoder import JSONDecodeError
 
 
-def json(body):
-    data = body.read()
-    try:
-        return json.loads(data)
-    except (UnicodeDecodeError, JSONDecodeError):
-        raise HttpError(HTTPStatus.BAD_REQUEST, 'Unparsable JSON body')
-
-
 def query(query_string):
     parsed_qs = parse_qs(query_string, keep_blank_values=True)
     return MultiDict(parsed_qs)
 
 
-def parse_multipart(body, content_type: str, chunksize: int=4096):
+def _json(body, content_type: str):
+    data = body.read()
+    try:
+        return json.loads(data), None
+    except (UnicodeDecodeError, JSONDecodeError):
+        raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable JSON body')
+
+
+def _multipart(body, content_type: str, chunksize: int=4096):
     parser, data = Multipart.parse(content_type)
     try:
         for chunk in body.read(4096):
@@ -38,19 +38,26 @@ def parse_multipart(body, content_type: str, chunksize: int=4096):
     return data.form, data.files
 
 
-def parse_urlencoded(body):
+def _urlencoded(body, content_type: str):
     data = body.read()
     try:
         parsed_qs = parse_qs(
             data.decode(), keep_blank_values=True, strict_parsing=True)
     except ValueError:
-        raise HttpError(HTTPStatus.BAD_REQUEST, 'Unparsable urlencoded body')
+        raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable urlencoded body')
     return MultiDict(parsed_qs), None
 
 
+PARSERS = {
+    'multipart/form-data': _multipart,
+    'application/x-www-form-urlencoded': _urlencoded,
+    'application/json': _json
+}
+
+
 def parse(body, content_type: str):
-    if 'multipart/form-data' in self.content_type:
-        return parse_multipart(body, content_type)
-    elif 'application/x-www-form-urlencoded' in self.content_type:
-        return parse_urlencoded(body)
-    raise HttpError(HTTPStatus.BAD_REQUEST, 'Unknown content type')
+    parser = PARSERS.get(content_type)
+    if parser is None:
+        raise HTTPError(
+            HTTPStatus.BAD_REQUEST, f'Unknown content type: {content_type}')
+    return parser(body, content_type)

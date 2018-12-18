@@ -5,7 +5,7 @@ from typing import TypeVar
 HTTPCode = TypeVar('HttpCode', HTTPStatus, int)
 
 
-class HttpError(Exception):
+class HTTPError(Exception):
 
     __slots__ = ('status', 'message')
 

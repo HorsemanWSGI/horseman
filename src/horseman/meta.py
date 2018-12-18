@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from abc import ABC, abstractmethod
-from horseman.responder import reply
+from horseman.response import Response
+from horseman import HTTPError
 
 
 class Overhead(ABC):
@@ -10,7 +11,7 @@ class Overhead(ABC):
     def set_data(self, data):
         """Set the data coming from the processing of the action.
         """
-
+        
 
 class View(ABC):
     pass
@@ -28,7 +29,7 @@ class APIView(View):
         worker = getattr(self, method, None)
         if worker is None:
             # Method not allowed
-            response = reply(405)
+            response = Response.create(405)
         else:
             response = worker(environ, overhead)
         return response
@@ -61,8 +62,12 @@ class APINode(ABC):
         return None
 
     def __call__(self, environ, start_response):
-        response = self.routing(environ)
-        if response is None:
-            response = reply(
-                404, "Not found. Please consult the API documentation.")
+        try:
+            response = self.routing(environ)
+            if response is None:
+                response = Response.create(
+                    404, "Not found. Please consult the API documentation.")
+        except HTTPError as error:
+            # FIXME: Log.
+            response = Response.create(error.status, error.message)
         return response(environ, start_response)

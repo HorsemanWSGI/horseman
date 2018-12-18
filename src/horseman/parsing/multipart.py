@@ -13,7 +13,7 @@ class Multipart:
         self.form = CIMultiDict()
         self.files = CIMultiDict()
 
-    @cls
+    @classmethod
     def parse(cls, content_type: str):
         multipart = cls()
         parser = Parser(multipart, content_type.encode())

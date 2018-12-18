@@ -31,8 +31,10 @@ class Response:
         start_response(status, list(self.headers_pair()))
         if self.status not in BODYLESS:
             if self.body is None:
-                return [self.status.description]
+                return [self.status.description.encode()]
             if isinstance(self.body, (str, bytes)):
+                if isinstance(self.body, str):
+                    return [self.body.encode()]
                 return [self.body]
             assert isinstance(self.body, Iterable)
             return self.body
@@ -42,7 +44,7 @@ class Response:
     def create(cls, code: HTTPCode=200, body=None, **headers):
         status = HTTPStatus(code)
         return Response(code, body, headers)
-
+    
 
 GenericError = Response(
     500,
