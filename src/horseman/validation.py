@@ -39,7 +39,7 @@ class Validator:
             if errors:
                 return Response.create(
                     400, json.dumps(errors),
-                    **{'Content-Type': 'application/json'})
+                    {'Content-Type': 'application/json'})
             overhead.set_data(form, files)
             return method(overhead)
         return validate_method

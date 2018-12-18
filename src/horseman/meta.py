@@ -1,22 +1,30 @@
-# -*- coding: utf-8 -*-
-
+import functools
 from abc import ABC, abstractmethod
+from inspect import getmembers, isfunction, ismethod
+
+from horseman.definitions import METHODS
 from horseman.response import Response
 from horseman import HTTPError
 
 
 class Overhead(ABC):
+    """WSGI Environ Overhead aka Request representation
+    This object contains everything needed to handle a request.
+    It can carry DB connectors, parsed data and other utils.
+    """
+
+    environ = None
 
     @abstractmethod
     def set_data(self, data):
         """Set the data coming from the processing of the action.
         """
-        
+
 
 class View(ABC):
     pass
 
-        
+
 class APIView(View):
     """Implementation of an action as a class.
     This works as an HTTP METHOD dispatcher.
@@ -27,12 +35,24 @@ class APIView(View):
     def __call__(self, environ, overhead):
         method = environ['REQUEST_METHOD'].upper()
         worker = getattr(self, method, None)
-        if worker is None:
-            # Method not allowed
-            response = Response.create(405)
-        else:
-            response = worker(environ, overhead)
-        return response
+        if worker is not None:
+            return worker(environ, overhead)
+
+        # Method not allowed
+        return Response.create(405)
+
+
+def view_methods(view):
+    if isinstance(view, View) or issubclass(view, View):
+        for name, func in getmembers(view, predicate=ismethod):
+            if name in METHODS:
+                yield name, functools.partial(func, view)
+        for name, func in getmembers(view, predicate=isfunction):
+            if name in METHODS:
+                yield name, func
+    else:
+        raise NotImplementedError(
+            f'{view} must be a subclass or instance of `horseman.meta.View`')
 
 
 class APINode(ABC):
