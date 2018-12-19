@@ -4,6 +4,14 @@ from collections.abc import Iterable
 from multidict import CIMultiDict
 from horseman import HTTPCode
 from typing import Iterable, Callable, TypeVar
+try:
+    # In case you use json heavily, we recommend installing
+    # https://pypi.python.org/pypi/ujson for better performances.
+    import ujson as json
+    JSONDecodeError = ValueError
+except ImportError:
+    import json as json
+    from json.decoder import JSONDecodeError
 
 
 BODYLESS = frozenset((
@@ -25,12 +33,13 @@ class Response:
     def __init__(self, status: HTTPCode, body, headers: Headers):
         self.status = HTTPStatus(status)
         self.body = body
-        self.headers = CIMultiDict(headers is None and {} or headers)
+        self.headers = CIMultiDict(headers or {})
 
     def headers_pair(self):
         if not inspect.isgenerator(self.body) and self.status not in BODYLESS:
+            size = self.body is not None and len(self.body) or 0
             if 'Content-Length' not in self.headers:
-                yield 'Content-Length', str(len(self.body))
+                yield 'Content-Length', str(size)
         for key, value in self.headers.items():
             yield key, str(value)
 
@@ -48,7 +57,7 @@ class Response:
         return []
 
     @classmethod
-    def create(cls, code: HTTPCode, body: Iterable, headers: Headers):
+    def create(cls, code: HTTPCode, body: Iterable=None, headers: Headers=None):
         status = HTTPStatus(code)
         return Response(code, body, headers)
 
@@ -62,3 +71,12 @@ GenericError = Response(
 
 def reply(code: HTTPCode=200, body: Iterable=None, headers: Headers=None):
     return Response.create(code, body, headers)
+
+
+def json_reply(code: HTTPCode=200, body: Iterable=None, headers: Headers=None):
+    data = json.dumps(body)
+    if headers is None:
+        headers = {'Content-Type': 'application/json'}
+    else:
+        headers['Content-Type'] = 'application/json'
+    return Response.create(code, data, headers)
