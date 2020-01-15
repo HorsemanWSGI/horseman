@@ -4,7 +4,7 @@ from inspect import getmembers, isfunction, ismethod
 
 from horseman.definitions import METHODS
 from horseman.response import Response
-from horseman import HTTPError
+from horseman.http import HTTPError
 
 
 class Overhead(ABC):

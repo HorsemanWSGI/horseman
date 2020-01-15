@@ -1,23 +1,25 @@
+from io import BytesIO
+from http import HTTPStatus
 from multifruits import Parser, extract_filename, parse_content_disposition
-from multidict import CIMultiDict
+from horseman.http import Form, Files
 
 
 class Multipart:
-    """Responsible of the parsing of multipart encoded body.
+    """Responsible of the parsing of multipart encoded `request.body`.
     """
 
-    __slots__ = ('app', 'form', 'files', '_parser', '_current',
-                 '_current_headers', '_current_params')
+    __slots__ = (
+        'form',
+        'files',
+        '_parser',
+        '_current',
+        '_current_headers',
+        '_current_params')
 
-    def __init__(self):
-        self.form = CIMultiDict()
-        self.files = CIMultiDict()
-
-    @classmethod
-    def parse(cls, content_type: str):
-        multipart = cls()
-        parser = Parser(multipart, content_type.encode())
-        return parser, multipart
+    def __init__(self, content_type: str):
+        self._parser = Parser(self, content_type.encode())
+        self.form = Form()
+        self.files = Files()
 
     def feed_data(self, data: bytes):
         self._parser.feed_data(data)
@@ -60,3 +62,18 @@ class Multipart:
                 self.form[name] = []
             self.form[name].append(self._current)
         self._current = None
+
+
+def read_multipart(content_type):
+    parser = Multipart(content_type)
+    while True:
+        chunk = yield
+        if not chunk:
+            yield parser.form, parser.files
+            break
+        try:
+            parser.feed_data(chunk)
+        except ValueError:
+            raise HTTPError(
+                HTTPStatus.BAD_REQUEST,
+                'Unparsable multipart body')

@@ -1,8 +1,7 @@
 import inspect
 from http import HTTPStatus
 from collections.abc import Iterable
-from multidict import CIMultiDict
-from horseman import HTTPCode
+from horseman.http import HTTPCode, Multidict
 from typing import Iterable, Callable, TypeVar
 try:
     # In case you use json heavily, we recommend installing
@@ -33,7 +32,7 @@ class Response:
     def __init__(self, status: HTTPCode, body, headers: Headers):
         self.status = HTTPStatus(status)
         self.body = body
-        self.headers = CIMultiDict(headers or {})
+        self.headers = Multidict(headers or {})
 
     def headers_pair(self):
         if not inspect.isgenerator(self.body) and self.status not in BODYLESS:

@@ -6,21 +6,13 @@ from setuptools import setup, find_packages
 
 version = "0.1"
 
-
 install_requires = [
     'autoroutes >= 0.2.0',
     'cromlech.jwt >= 0.1',
     'setuptools',
-    'webob',
-]
-
-zope_requires = [
-    'zope.interface',
-    'zope.schema',
-]
-
-json_requires = [
-    'jsonschema'
+    'biscuits',
+    'multifruits',
+    'schema'
 ]
 
 test_requires = [
@@ -51,8 +43,6 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
     extras_require={
-        'zope': zope_requires,
-        'json': json_requires,
         'test': test_requires,
         },
     )

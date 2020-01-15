@@ -1,7 +1,7 @@
 from functools import wraps
 from horseman.response import Response
 from horseman.parsing import parse
-from voluptuous import Schema, MultipleInvalid
+from schema import Schema, SchemaError
 from collections import defaultdict
 try:
     # In case you use json heavily, we recommend installing
@@ -22,13 +22,11 @@ class Validator:
 
     def validate_object(self, obj):
         try:
-            self.schema(obj)
-        except MultipleInvalid as invalid:
-            errors = defaultdict(list)
-            for e in invalid.errors:
-                key = '/'.join((str(p) for p in e.path))
-                errors[key].append(e.msg)
-            return errors
+            self.schema.validate(obj)
+        except SchemaError as invalid:
+            # At this point, schema doesn't know how to
+            # exhaust errors, we only get the first one.
+            return invalid
 
     def __call__(self, method):
         @wraps(method)
@@ -43,15 +41,3 @@ class Validator:
             overhead.set_data(form, files)
             return method(overhead)
         return validate_method
-
-
-try:
-    from voluptuary import to_voluptuous
-except ImportError:
-    pass
-else:
-    class JSONSchemaValidator(Validator):
-
-        def __init__(self, jschema: dict):
-            self.jschema = to_voluptuous(jschema)
-            self.jsonschema = jschema

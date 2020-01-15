@@ -1,8 +1,7 @@
 from http import HTTPStatus
 from urllib.parse import parse_qs
-from multidict import MultiDict
 from horseman.parsing.multipart import Multipart
-from horseman import HTTPCode, HTTPError
+from horseman.http import HTTPError, Multidict
 try:
     # In case you use json heavily, we recommend installing
     # https://pypi.python.org/pypi/ujson for better performances.
@@ -15,7 +14,7 @@ except ImportError:
 
 def query(query_string):
     parsed_qs = parse_qs(query_string, keep_blank_values=True)
-    return MultiDict(parsed_qs)
+    return Multidict(parsed_qs)
 
 
 def _json(body, content_type: str):
@@ -45,7 +44,7 @@ def _urlencoded(body, content_type: str):
             data.decode(), keep_blank_values=True, strict_parsing=True)
     except ValueError:
         raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable urlencoded body')
-    return MultiDict(parsed_qs), None
+    return Multidict(parsed_qs), None
 
 
 PARSERS = {

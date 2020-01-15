@@ -1,23 +1,16 @@
 API utilities
 *************
 
-  >>> from horseman.validation import ZopeSchema as validate
-
   >>> USERS = {}
 
-  
-  >>> from zope.schema import ASCIILine, List
-  >>> from zope.interface import Interface
-  >>> from horseman.responder import reply
+  >>> from horseman.validation import Validator
+  >>> from horseman.response import reply
+  >>> from schema import And
 
-  >>> class IUserAction(Interface):
-  ...
-  ...  username = ASCIILine(
-  ...      title="User identifier",
-  ...      required=True,
-  ...      )
+  >>> user_validator = Validator([
+  ... {'username': And(str, lambda s: len(s) > 6)}])
 
-  >>> @validate(IUserAction, 'POST')
+  >>> @user_validator
   ... def UserDetails(action_request, overhead):
   ...
   ...     user_details = USERS.get(action_request.username)
@@ -27,16 +20,12 @@ API utilities
   ...
   ...     return reply(404, text="User not found.")
 
-  >>> class IUsersListing(Interface):
-  ...
-  ...  departments = List(
-  ...      title=u"Department identifiers, for an OR request",
-  ...      required=False,
-  ...      value_type=ASCIILine(),
-  ...      )
+  >>> from schema import Optional
+  >>> user_listing_validator = Validator([
+  ... {'departments': Optional([str])}])
 
   >>> import json
-  >>> @validate(IUsersListing, 'GET')
+  >>> @user_listing_validator
   ... def UsersListing(action_request, overhead):
   ...
   ...     listing = []
@@ -50,33 +39,8 @@ API utilities
   ...     return reply(200, text=json.dumps(listing),
   ...                  content_type="application/json")
 
-  >>> class IUserCreation(Interface):
-  ...
-  ...  username = ASCIILine(
-  ...      title="User identifiers",
-  ...      required=True,
-  ...      )
-  ...
-  ...  departments = List(
-  ...      title=u"Department identifiers",
-  ...      required=True,
-  ...      value_type=ASCIILine(),
-  ...      )
-
-  >>> @allowed('POST')
-  ... @validate(IUserCreation, 'POST')
-  ... def UserCreation(action_request, overhead):
-  ...
-  ...     if action_request.username in USERS:
-  ...         return reply(409, text="User already registered")
-  ...     else:
-  ...         USERS[action_request.username] = {
-  ...             'departments': action_request.departments}
-  ...     return reply(201, text="User added.")
-
   >>> UsersModule = {
   ...     '/details': UserDetails,
-  ...     '/add': UserCreation,
   ...     '/list': UsersListing,
   ... }
 
