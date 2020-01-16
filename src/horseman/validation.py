@@ -1,6 +1,6 @@
 from functools import wraps
 from horseman.response import Response
-from horseman.parsing import parse
+from horseman.parsing import parse, query
 from schema import Schema, SchemaError
 from collections import defaultdict
 try:
@@ -26,18 +26,27 @@ class Validator:
         except SchemaError as invalid:
             # At this point, schema doesn't know how to
             # exhaust errors, we only get the first one.
-            return invalid
+            return invalid.code
 
     def __call__(self, method):
         @wraps(method)
         def validate_method(overhead):
-            form, files = parse(
-                overhead.environ['wsgi.input'], overhead.content_type)
+            form = {}
+            if overhead.content_type:
+                form, files = parse(
+                    overhead.environ['wsgi.input'], overhead.content_type)
+
+            if 'QUERY_STRING' in overhead.environ:
+                query_params = query(overhead.environ['QUERY_STRING'])
+                form.update(query_params)
+
             errors = self.validate_object(form)
             if errors:
-                return Response.create(
-                    400, json.dumps(errors),
-                    {'Content-Type': 'application/json'})
-            overhead.set_data(form, files)
+                return Response.create(400, errors)
+
+            overhead.set_data({
+                'form': form,
+                'files': files
+            })
             return method(overhead)
         return validate_method
