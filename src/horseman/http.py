@@ -38,13 +38,18 @@ class Multidict(dict):
                                 "Missing '{}' key".format(key))
             return default
 
+    def dict_items(self):
+        for key in self.keys():
+            if key.endswith('[]'):
+                yield key[:-2], self.list(key)
+            else:
+                yield key, self.get(key)
+
+    def to_dict(self):
+        return {k: v for k, v in self.dict_items()}
+
 
 class Query(Multidict):
-    """Allow to access casted GET parameters from `request.query`.
-
-    E.g.:
-        `request.query.int('weight', 0)` will return an integer or zero.
-    """
 
     TRUE_STRINGS = ('t', 'true', 'yes', '1', 'on')
     FALSE_STRINGS = ('f', 'false', 'no', '0', 'off')
@@ -81,11 +86,13 @@ class Query(Multidict):
 
 
 class Form(Query):
-    """Allow to access casted POST parameters from `request.body`."""
+    """
+    """
 
 
 class Files(Multidict):
-    """Allow to access POSTed files from `request.body`."""
+    """
+    """
 
 
 class Cookies(dict):

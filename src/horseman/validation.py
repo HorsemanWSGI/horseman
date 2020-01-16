@@ -31,21 +31,23 @@ class Validator:
     def __call__(self, method):
         @wraps(method)
         def validate_method(overhead):
-            form = {}
+            data = {}
             if overhead.content_type:
                 form, files = parse(
                     overhead.environ['wsgi.input'], overhead.content_type)
+                data = form.to_dict()
+                print(data)
 
             if 'QUERY_STRING' in overhead.environ:
                 query_params = query(overhead.environ['QUERY_STRING'])
-                form.update(query_params)
+                data.update(query_params.to_dict())
 
-            errors = self.validate_object(form)
+            errors = self.validate_object(data)
             if errors:
                 return Response.create(400, errors)
 
             overhead.set_data({
-                'form': form,
+                'form': data,
                 'files': files
             })
             return method(overhead)

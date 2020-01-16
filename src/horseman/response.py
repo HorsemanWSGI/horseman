@@ -35,10 +35,6 @@ class Response:
         self.headers = Multidict(headers or {})
 
     def headers_pair(self):
-        if not inspect.isgenerator(self.body) and self.status not in BODYLESS:
-            size = self.body is not None and len(self.body) or 0
-            if 'Content-Length' not in self.headers:
-                yield 'Content-Length', str(size)
         for key, value in self.headers.items():
             yield key, str(value)
 
@@ -52,7 +48,8 @@ class Response:
                 return [self.body]
             elif isinstance(self.body, str):
                 return [self.body.encode()]
-            return self.body
+            else:
+                return self.body
         return []
 
     @classmethod
