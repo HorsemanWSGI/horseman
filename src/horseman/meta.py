@@ -44,10 +44,7 @@ class APIView(View):
 
 def view_methods(view):
     if isinstance(view, View) or issubclass(view, View):
-        for name, func in getmembers(view, predicate=ismethod):
-            if name in METHODS:
-                yield name, functools.partial(func, view)
-        for name, func in getmembers(view, predicate=isfunction):
+        for name, func in getmembers(view):
             if name in METHODS:
                 yield name, func
     else:
@@ -77,16 +74,16 @@ class APINode(ABC):
         # We transform it back to UTF-8
         path_info = environ['PATH_INFO'].encode('latin-1').decode('utf-8')
         routing_args = self.lookup(path_info, environ)
-        if routing_args:
-            return self.process_endpoint(environ, routing_args)
-        return None
+        if routing_args is None:
+            return None
+        return self.process_endpoint(environ, routing_args)
 
     def __call__(self, environ, start_response):
         try:
             response = self.routing(environ)
             if response is None:
-                response = Response.create(
-                    404, "Not found. Please consult the API documentation.")
+                response = Response.create(404)
+
         except HTTPError as error:
             # FIXME: Log.
             response = Response.create(error.status, error.message)

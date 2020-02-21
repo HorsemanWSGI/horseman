@@ -76,3 +76,12 @@ def json_reply(code: HTTPCode=200, body: Iterable=None, headers: Headers=None):
     else:
         headers['Content-Type'] = 'application/json'
     return Response.create(code, data, headers)
+
+
+def file_iterator(path, chunk=4096):
+    with open(path, 'rb') as reader:
+        while True:
+            data = reader.read(chunk)
+            if not data:
+                break
+            yield data

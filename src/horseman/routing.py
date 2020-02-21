@@ -1,3 +1,4 @@
+import sys
 import inspect
 from autoroutes import Routes
 from http import HTTPStatus
@@ -22,8 +23,8 @@ class RoutingNode(APINode):
                         "Can't use `methods` with class view")
 
                 inst = view()
-                payload = {method.lower(): func
-                           for method, func in view_methods(inst)}
+                payload = {
+                    method: func for method, func in view_methods(inst)}
                 if not payload:
                     raise ValueError(f"Empty view: {view}")
             else:
@@ -46,4 +47,37 @@ class RoutingNode(APINode):
         return endpoint(request)
 
     def lookup(self, path_info, environ):
-         return self.routes.match(path_info)
+         found = self.routes.match(path_info)
+         if found == (None, None):
+             return None
+         return found
+
+
+class SentryNode(APINode):
+
+    def handle_exception(self, exc_info, environ):
+        pass
+
+    def __call__(self, environ, start_response):
+        iterable = None
+
+        try:
+            iterable = super().__call__(environ, start_response)
+            for event in iterable:
+                yield event
+
+        except Exception:
+            exc_info = sys.exc_info()
+            self.handle_exception(exc_info, environ)
+            exc_info = None
+            raise
+
+        finally:
+            if hasattr(iterable, 'close'):
+                try:
+                    iterable.close()
+                except Exception:
+                    exc_info = sys.exc_info()
+                    self.handle_exception(exc_info, environ)
+                    exc_info = None
+                    raise
