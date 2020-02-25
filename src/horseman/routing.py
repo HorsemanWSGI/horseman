@@ -8,10 +8,10 @@ from horseman.http import HTTPError
 
 class RoutingNode(APINode):
 
-    request_type = None
+    request_type: Overhead = None
 
     def __init__(self):
-        self.routes: Overhead = Routes()
+        self.routes = Routes()
 
     def route(self, path: str, methods: list=None, **extras: dict):
 
