@@ -16,6 +16,10 @@ class Overhead(ABC):
     environ = None
 
     @abstractmethod
+    def __init__(self, node, environ, **params):
+        pass
+
+    @abstractmethod
     def set_data(self, data):
         """Set the data coming from the processing of the action.
         """

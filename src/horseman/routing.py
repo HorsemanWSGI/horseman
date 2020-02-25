@@ -11,7 +11,7 @@ class RoutingNode(APINode):
     request_type = None
 
     def __init__(self):
-        self.routes = Routes()
+        self.routes: Overhead = Routes()
 
     def route(self, path: str, methods: list=None, **extras: dict):
 
@@ -43,7 +43,7 @@ class RoutingNode(APINode):
         endpoint = methods.get(environ['REQUEST_METHOD'])
         if endpoint is None:
             raise HTTPError(HTTPStatus.METHOD_NOT_ALLOWED)
-        request = self.request_type(environ, **params)
+        request = self.request_type(self, environ, **params)
         return endpoint(request)
 
     def lookup(self, path_info, environ):
