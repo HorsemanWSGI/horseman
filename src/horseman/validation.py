@@ -1,8 +1,8 @@
-from functools import wraps
+import wrapt
 from horseman.response import Response
 from horseman.parsing import parse, query
-from schema import Schema, SchemaError
 from collections import defaultdict
+from pydantic import BaseModel, ValidationError
 try:
     # In case you use json heavily, we recommend installing
     # https://pypi.python.org/pypi/ujson for better performances.
@@ -13,42 +13,19 @@ except ImportError:
     from json.decoder import JSONDecodeError
 
 
-class Validator:
-
-    def __init__(self, schema):
-        if not isinstance(schema, Schema):
-            schema = Schema(schema)
-        self.schema = schema
-
-    def validate_object(self, obj):
+def validate(model: BaseModel):
+    @wrapt.decorator
+    def model_validator(wrapped, instance, args, kwargs):
+        request = args[0]
+        form, files = parse(
+            request.environ['wsgi.input'], request.content_type)
         try:
-            self.schema.validate(obj)
-        except SchemaError as invalid:
-            # At this point, schema doesn't know how to
-            # exhaust errors, we only get the first one.
-            return invalid.code
+            item = model.parse_obj(
+                {**form.to_dict(), **files.to_dict()})
+        except ValidationError as e:
+            return Response.create(
+                400, e.json(),
+                headers={'Content-Type': 'application/json'})
 
-    def __call__(self, method):
-        @wraps(method)
-        def validate_method(overhead):
-            data = {}
-            if overhead.content_type:
-                form, files = parse(
-                    overhead.environ['wsgi.input'], overhead.content_type)
-                data = form.to_dict()
-                print(data)
-
-            if 'QUERY_STRING' in overhead.environ:
-                query_params = query(overhead.environ['QUERY_STRING'])
-                data.update(query_params.to_dict())
-
-            errors = self.validate_object(data)
-            if errors:
-                return Response.create(400, errors)
-
-            overhead.set_data({
-                'form': data,
-                'files': files
-            })
-            return method(overhead)
-        return validate_method
+        return wrapped(request, item, **kwargs)
+    return model_validator

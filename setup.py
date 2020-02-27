@@ -12,7 +12,8 @@ install_requires = [
     'setuptools',
     'biscuits',
     'multifruits',
-    'schema'
+    'schema',
+    'pydantic',
 ]
 
 test_requires = [
