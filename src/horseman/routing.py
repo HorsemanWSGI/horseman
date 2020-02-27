@@ -6,51 +6,55 @@ from horseman.meta import Overhead, APINode, view_methods
 from horseman.http import HTTPError
 
 
+def add_route(router, path: str, methods: list=None, **extras: dict):
+
+    def route_from_view_or_function(view):
+        nonlocal methods
+        if inspect.isclass(view):
+            if methods is not None:
+                raise AttributeError(
+                    "Can't use `methods` with class view")
+
+            inst = view()
+            payload = {
+                method: func for method, func in view_methods(inst)}
+            if not payload:
+                raise ValueError(f"Empty view: {view}")
+        else:
+            if methods is None:
+                methods = ['GET']
+            payload = {method: view for method in methods}
+
+        payload.update(extras)
+        router.add(path, **payload)
+        return view
+
+    return route_from_view_or_function
+
+
 class RoutingNode(APINode):
 
-    request_type: Overhead = None
+    routes: Routes
+    request_factory: Overhead
 
-    def __init__(self):
-        self.routes = Routes()
+    __slots__ = ('routes', 'request_factory')
 
     def route(self, path: str, methods: list=None, **extras: dict):
-
-        def add_route(view):
-            nonlocal methods
-            if inspect.isclass(view):
-                if methods is not None:
-                    raise AttributeError(
-                        "Can't use `methods` with class view")
-
-                inst = view()
-                payload = {
-                    method: func for method, func in view_methods(inst)}
-                if not payload:
-                    raise ValueError(f"Empty view: {view}")
-            else:
-                if methods is None:
-                    methods = ['GET']
-                payload = {method: view for method in methods}
-
-            payload.update(extras)
-            self.routes.add(path, **payload)
-            return view
-
-        return add_route
+        return add_route(self.routes, path, methods, **extras)
 
     def process_endpoint(self, environ, routing_args):
         methods, params = routing_args  # unpacking the routing result
         endpoint = methods.get(environ['REQUEST_METHOD'])
         if endpoint is None:
             raise HTTPError(HTTPStatus.METHOD_NOT_ALLOWED)
-        request = self.request_type(self, environ, **params)
+        request = self.request_factory(self, environ, **params)
         return endpoint(request)
 
     def lookup(self, path_info, environ):
-         found = self.routes.match(path_info)
-         if found == (None, None):
-             return None
-         return found
+        found = self.routes.match(path_info)
+        if found == (None, None):
+            return None
+        return found
 
 
 class SentryNode(APINode):

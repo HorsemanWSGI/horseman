@@ -1,6 +1,6 @@
 import functools
 from abc import ABC, abstractmethod
-from inspect import getmembers, isfunction, ismethod
+from inspect import getmembers
 
 from horseman.definitions import METHODS
 from horseman.response import Response
