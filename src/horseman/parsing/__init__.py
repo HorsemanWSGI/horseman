@@ -18,7 +18,7 @@ def query(query_string):
 
 
 def _json(body, content_type: str):
-    data = body.read()
+    data = body.getvalue()
     try:
         return json.loads(data), Files()
     except (UnicodeDecodeError, JSONDecodeError):
@@ -26,15 +26,9 @@ def _json(body, content_type: str):
 
 
 def _multipart(body, content_type: str, chunksize: int=4096):
-    parser, data = Multipart.parse(content_type)
-    try:
-        for chunk in body.read(4096):
-            if not chunk:
-                break
-            parser.feed_data(chunk)
-    except ValueError:
-        raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable multipart body')
-    return data.form, data.files
+    content_parser = Multipart(content_type)
+    content_parser.feed_data(body.getvalue())
+    return content_parser.form, content_parser.files
 
 
 def _urlencoded(body, content_type: str):
@@ -55,7 +49,8 @@ PARSERS = {
 
 
 def parse(body, content_type: str):
-    parser = PARSERS.get(content_type)
+    identifier = content_type.split(';', 1)[0].strip()
+    parser = PARSERS.get(identifier)
     if parser is None:
         raise HTTPError(
             HTTPStatus.BAD_REQUEST, f'Unknown content type: {content_type}')

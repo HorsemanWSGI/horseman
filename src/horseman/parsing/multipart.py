@@ -72,6 +72,7 @@ def read_multipart(content_type):
             yield parser.form, parser.files
             break
         try:
+            print(chunk)
             parser.feed_data(chunk)
         except ValueError:
             raise HTTPError(
