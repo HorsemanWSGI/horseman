@@ -1,16 +1,12 @@
-import inspect
 from http import HTTPStatus
-from collections.abc import Iterable
 from horseman.http import HTTPCode, Multidict
 from typing import Iterable, Callable, TypeVar
 try:
     # In case you use json heavily, we recommend installing
     # https://pypi.python.org/pypi/ujson for better performances.
     import ujson as json
-    JSONDecodeError = ValueError
 except ImportError:
     import json as json
-    from json.decoder import JSONDecodeError
 
 
 BODYLESS = frozenset((
@@ -54,8 +50,7 @@ class Response:
 
     @classmethod
     def create(cls, code: HTTPCode, body: Iterable=None, headers: Headers=None):
-        status = HTTPStatus(code)
-        return Response(code, body, headers)
+        return Response(HTTPStatus(code), body, headers)
 
 
 GenericError = Response(

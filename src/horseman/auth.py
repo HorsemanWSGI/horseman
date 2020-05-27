@@ -1,8 +1,6 @@
 import base64
 import wrapt
 from horseman.response import Response
-from inspect import isfunction, ismethod
-from functools import wraps
 
 
 unauthorized = Response.create(401)

@@ -3,14 +3,6 @@ from horseman.response import Response
 from horseman.parsing import parse
 from horseman.http import Multidict
 from pydantic import BaseModel, ValidationError
-try:
-    # In case you use json heavily, we recommend installing
-    # https://pypi.python.org/pypi/ujson for better performances.
-    import ujson as json
-    JSONDecodeError = ValueError
-except ImportError:
-    import json as json
-    from json.decoder import JSONDecodeError
 
 
 def validate(model: BaseModel):
