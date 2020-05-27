@@ -8,12 +8,11 @@ version = "0.1"
 
 install_requires = [
     'autoroutes >= 0.2.0',
-    'cromlech.jwt >= 0.1',
     'setuptools',
     'biscuits',
     'multifruits',
-    'schema',
     'pydantic',
+    'wrapt',
 ]
 
 test_requires = [
