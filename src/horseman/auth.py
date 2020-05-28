@@ -6,24 +6,42 @@ from horseman.response import Response
 unauthorized = Response.create(401)
 
 
+def resolve_auth(checkers, environ, conf):
+    auth = environ.get('HTTP_AUTHORIZATION')
+    if auth is not None:
+        authtype, authvalue = auth.split(' ', 1)
+        checker = checkers.get(authtype.lower())
+        if checker is not None:
+            code, payload = checker(authvalue, environ, conf)
+            if code == 200:
+                environ['auth_payload'] = payload
+                return True
+            return getattr(checker, 'unauthorized', False)
+    return False
+
+
 def authenticate(checkers, unauthorized=unauthorized, **conf):
 
     @wrapt.decorator
     def authenticator(wrapped, instance, args, kwargs):
         request = args[0]
-        auth = request.environ.get('HTTP_AUTHORIZATION')
-        if auth is not None:
-            authtype, authvalue = auth.split(' ', 1)
-            checker = checkers.get(authtype.lower())
-            if checker is not None:
-                code, payload = checker(
-                    authvalue, request.environ, conf)
+        response = resolve_auth(checkers, request.environ, conf)
+        if response is False:
+            return unauthorized
+        return wrapped(*args)
 
-                if code == 200:
-                    request.environ['auth_payload'] = payload
-                    return wrapped(*args)
+    return authenticator
 
-        return unauthorized
+
+def middleware(checkers, unauthorized=unauthorized, **conf):
+
+    @wrapt.decorator
+    def authenticator(wrapped, instance, args, kwargs):
+        environ = args[0]
+        response = resolve_auth(checkers, environ, conf)
+        if response is False:
+            return unauthorized(*args)
+        return wrapped(*args)
 
     return authenticator
 
@@ -72,7 +90,7 @@ class BasicAuth:
         environ['REMOTE_USER'] = username
         session = self.session_dict(environ)
         if session is not None:
-            session[self.session_user_key] = username
+            session['user'] = username
 
     def get_cached_username(self, environ):
         """Look for the username in the session if found.
@@ -81,7 +99,7 @@ class BasicAuth:
         """
         session = self.session_dict(environ)
         if session is not None:
-            return session.get(self.session_user_key)
+            return session.get('user')
         else:
             return None
 
