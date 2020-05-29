@@ -27,9 +27,9 @@ class Multidict(dict):
     """
 
     def get(self, key: str, default=...):
-        return self.list(key, [default])[0]
+        return self.getlist(key, [default])[0]
 
-    def list(self, key: str, default=...):
+    def getlist(self, key: str, default=...):
         try:
             return self[key]
         except KeyError:
@@ -41,7 +41,7 @@ class Multidict(dict):
     def dict_items(self):
         for key in self.keys():
             if key.endswith('[]'):
-                yield key[:-2], self.list(key)
+                yield key[:-2], self.getlist(key)
             else:
                 yield key, self.get(key)
 

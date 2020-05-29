@@ -35,11 +35,11 @@ class APIView(View):
     example : OPTIONS, GET, POST
     """
 
-    def __call__(self, environ, overhead):
+    def __call__(self, overhead, environ):
         method = environ['REQUEST_METHOD'].upper()
         worker = getattr(self, method, None)
         if worker is not None:
-            return worker(environ, overhead)
+            return worker(overhead, environ)
 
         # Method not allowed
         return Response.create(405)
