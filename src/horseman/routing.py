@@ -6,25 +6,28 @@ from horseman.meta import Overhead, APINode, view_methods
 from horseman.http import HTTPError
 
 
+def route_payload(view, methods: list=None):
+    if inspect.isclass(view):
+        if methods is not None:
+            raise AttributeError(
+                "Can't use `methods` with class view")
+
+        inst = view()
+        payload = {
+            method: func for method, func in view_methods(inst)}
+        if not payload:
+            raise ValueError(f"Empty view: {view}")
+    else:
+        if methods is None:
+            methods = ['GET']
+        payload = {method: view for method in methods}
+    return payload
+
+
 def add_route(router, path: str, methods: list=None, **extras: dict):
 
     def route_from_view_or_function(view):
-        nonlocal methods
-        if inspect.isclass(view):
-            if methods is not None:
-                raise AttributeError(
-                    "Can't use `methods` with class view")
-
-            inst = view()
-            payload = {
-                method: func for method, func in view_methods(inst)}
-            if not payload:
-                raise ValueError(f"Empty view: {view}")
-        else:
-            if methods is None:
-                methods = ['GET']
-            payload = {method: view for method in methods}
-
+        payload = route_payload(view, methods)
         payload.update(extras)
         router.add(path, **payload)
         return view
