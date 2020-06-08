@@ -13,21 +13,21 @@ def route_payload(view, methods: list=None):
                 "Can't use `methods` with class view")
 
         inst = view()
-        payload = {
-            method: func for method, func in view_methods(inst)}
-        if not payload:
-            raise ValueError(f"Empty view: {view}")
+        for method, func in view_methods(inst):
+            yield method, func
     else:
         if methods is None:
             methods = ['GET']
-        payload = {method: view for method in methods}
-    return payload
+        for method in methods:
+            yield method, view
 
 
 def add_route(router, path: str, methods: list=None, **extras: dict):
 
     def route_from_view_or_function(view):
-        payload = route_payload(view, methods)
+        payload = dict(route_payload(view, methods))
+        if not payload:
+            raise ValueError(f"Empty view: {view}")
         payload.update(extras)
         router.add(path, **payload)
         return view
