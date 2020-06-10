@@ -4,6 +4,7 @@ from inspect import getmembers
 from horseman.definitions import METHODS
 from horseman.response import Response
 from horseman.http import HTTPError
+from horseman.prototyping import Environ
 
 
 class Overhead(ABC):
@@ -12,10 +13,10 @@ class Overhead(ABC):
     It can carry DB connectors, parsed data and other utils.
     """
 
-    environ = None
+    environ: Environ = None
 
     @abstractmethod
-    def __init__(self, node, environ, **params):
+    def __init__(self, node, environ: Environ, **params):
         pass
 
     @abstractmethod
