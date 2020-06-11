@@ -9,11 +9,15 @@ from horseman.http import HTTPError
 def subroute(func=None, path: str=None, methods: list=None):
 
     def subrouting(func):
-        func.__subroute__ = (path or func.__name__, methods)
+        func.__subroute__ = (
+            path is not None and path or func.__name__, methods)
         return func
 
     if func is not None:
-        return subrouting(func)
+        # Default
+        func.__subroute__ = (None, methods)
+        return func
+
     return subrouting
 
 
@@ -29,7 +33,10 @@ def route_payload(path: str, view, methods: list=None):
                 subpath, submethods = getattr(
                     func, '__subroute__', (name, methods))
                 for method in submethods or ['GET']:
-                    yield f'{path}/{subpath}', method or ['GET'], func
+                    if not subpath:
+                        yield path, method or ['GET'], func
+                    else:
+                        yield f'{path}/{subpath}', method or ['GET'], func
     else:
         if methods is None:
             methods = ['GET']
