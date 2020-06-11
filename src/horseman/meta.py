@@ -105,3 +105,36 @@ class APINode(ABC):
             # FIXME: Log.
             response = Response.create(error.status, error.message)
         return response(environ, start_response)
+
+
+class SentryNode(APINode):
+
+    @abstractmethod
+    def handle_exception(self, exc_info, environ):
+        """This method handles exceptions happening while the
+        application is trying to render/process/interpret the request.
+        """
+
+    def __call__(self, environ, start_response):
+        iterable = None
+
+        try:
+            iterable = super().__call__(environ, start_response)
+            for event in iterable:
+                yield event
+
+        except Exception:
+            exc_info = sys.exc_info()
+            self.handle_exception(exc_info, environ)
+            exc_info = None
+            raise
+
+        finally:
+            if hasattr(iterable, 'close'):
+                try:
+                    iterable.close()
+                except Exception:
+                    exc_info = sys.exc_info()
+                    self.handle_exception(exc_info, environ)
+                    exc_info = None
+                    raise
