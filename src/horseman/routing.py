@@ -2,34 +2,47 @@ import sys
 import inspect
 from autoroutes import Routes
 from http import HTTPStatus
-from horseman.meta import Overhead, APINode, view_methods
+from horseman.meta import View, APIView, Overhead, APINode, view_methods
 from horseman.http import HTTPError
 
 
-def route_payload(view, methods: list=None):
-    if inspect.isclass(view):
-        if methods is not None:
-            raise AttributeError(
-                "Can't use `methods` with class view")
+def subroute(func=None, path: str=None, methods: list=None):
 
+    def subrouting(func):
+        func.__subroute__ = (path or func.__name__, methods)
+        return func
+
+    if func is not None:
+        return subrouting(func)
+    return subrouting
+
+
+def route_payload(path: str, view, methods: list=None):
+    if inspect.isclass(view):
         inst = view()
-        for method, func in view_methods(inst):
-            yield method, func
+        members = view_methods(inst)
+        if isinstance(inst, APIView):
+            for name, func in members:
+                yield path, name, func
+        else:
+            for name, func in members:
+                subpath, submethods = getattr(
+                    func, '__subroute__', (name, methods))
+                for method in submethods or ['GET']:
+                    yield f'{path}/{subpath}', method or ['GET'], func
     else:
         if methods is None:
             methods = ['GET']
         for method in methods:
-            yield method, view
+            yield path, method, view
 
 
 def add_route(router, path: str, methods: list=None, **extras: dict):
 
     def route_from_view_or_function(view):
-        payload = dict(route_payload(view, methods))
-        if not payload:
-            raise ValueError(f"Empty view: {view}")
-        payload.update(extras)
-        router.add(path, **payload)
+        for fullpath, method, func in route_payload(path, view, methods):
+            payload = {method: func, **extras}
+            router.add(fullpath, **payload)
         return view
 
     return route_from_view_or_function

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from inspect import getmembers
+from inspect import isclass, isfunction, ismethod, getmembers
 
 from horseman.definitions import METHODS
 from horseman.response import Response
@@ -46,14 +46,27 @@ class APIView(View):
         return Response.create(405)
 
 
-def view_methods(view):
-    if isinstance(view, View) or issubclass(view, View):
-        for name, func in getmembers(view):
-            if name in METHODS:
-                yield name, func
+def view_methods(vw):
+    if isclass(vw):
+        if issubclass(vw, APIView):
+            predicate = lambda x: isfunction(x) and  x.__name__ in METHODS
+        elif issubclass(vw, View):
+            predicate = lambda x: (
+                isfunction(x) and not x.__name__.startswith('_'))
+        else:
+            raise NotImplementedError(
+                f'{vw} must be a subclass of `horseman.meta.View`')
     else:
-        raise NotImplementedError(
-            f'{view} must be a subclass or instance of `horseman.meta.View`')
+        if isinstance(vw, APIView):
+            predicate = lambda x: ismethod(x) and  x.__name__ in METHODS
+        elif isinstance(vw, View):
+            predicate = lambda x: (
+                ismethod(x) and not x.__name__.startswith('_'))
+        else:
+            raise NotImplementedError(
+                f'{vw} must be an instance of `horseman.meta.View`')
+
+    return getmembers(vw, predicate=predicate)
 
 
 class APINode(ABC):
