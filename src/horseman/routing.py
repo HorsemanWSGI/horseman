@@ -1,4 +1,3 @@
-import sys
 import inspect
 from autoroutes import Routes
 from http import HTTPStatus
