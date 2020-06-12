@@ -7,9 +7,9 @@ from types import TracebackType
 StatusCode = TypeVar('StatusCode', str, bytes)
 Environ = Mapping[str, Any]
 ResponseHeaders = Sequence[Tuple[str, str]]
-ExceptionInfo = Optional[Tuple[Exception, Any, TracebackType]]
+ExceptionInfo = Tuple[Exception, Any, TracebackType]
 StartResponse = Callable[
-    [StatusCode, ResponseHeaders, ExceptionInfo],
+    [StatusCode, ResponseHeaders, Optional[ExceptionInfo]],
     Optional[Callable[[ByteString], None]]
 ]
 WSGICallable = Callable[[Environ, StartResponse], Iterable[bytes]]

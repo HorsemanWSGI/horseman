@@ -1,8 +1,9 @@
 import inspect
 from autoroutes import Routes
 from http import HTTPStatus
-from horseman.meta import View, APIView, Overhead, APINode, view_methods
+from horseman.meta import View, APIView, Overhead, APINode
 from horseman.http import HTTPError
+from horseman.util import view_methods
 
 
 def subroute(func=None, path: str=None, methods: list=None):
