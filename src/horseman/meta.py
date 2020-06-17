@@ -49,7 +49,7 @@ class APIView(View):
 
     def __call__(self, overhead: Overhead, environ: Environ) -> Response:
         method = environ['REQUEST_METHOD'].upper()
-        if worker := getattr(self, method, None) is not None:
+        if worker := getattr(self, method, None):
             return worker(overhead, environ)
 
         # Method not allowed
