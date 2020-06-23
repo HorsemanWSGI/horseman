@@ -23,11 +23,10 @@ class Overhead(ABC):
     This object contains everything needed to handle a request.
     It can carry DB connectors, parsed data and other utils.
     """
-
-    environ: Environ = None
+    environ: Environ
 
     @abstractmethod
-    def __init__(self, node, environ: Environ, **params):
+    def __init__(self, node: Node, environ: Environ, **params):
         pass
 
     @abstractmethod
@@ -60,32 +59,26 @@ class APIView(View):
 class APINode(Node):
 
     @abstractmethod
-    def process_endpoint(self, environ: Environ, routing_args: Dict):
+    def process_endpoint(self, endpoint, environ: Environ, **payload):
         """Process the looked up endpoint and returns a WSGI callable.
         """
 
     @abstractmethod
-    def lookup(self, path_info: str, environ: Environ):
+    def resolve(self, path_info: str, environ: Environ):
         """Lookups up the endpoint and returns the routing args, usually
         containing the possible conditional parameters and the controller.
         If nothing was found, returns None or a WSGI callable corresponding
         to the HTTP Error (404, 405, 406).
         """
 
-    def routing(self, environ: Environ):
+    def __call__(self, environ: Environ, start_response: StartResponse):
         # according to PEP 3333 the native string representing PATH_INFO
         # (and others) can only contain unicode codepoints from 0 to 255,
         # which is why we need to decode to latin-1 instead of utf-8 here.
         # We transform it back to UTF-8
         path_info = environ['PATH_INFO'].encode('latin-1').decode('utf-8')
-        routing_args = self.lookup(path_info, environ)
-        if routing_args is None:
-            return None
-        return self.process_endpoint(environ, routing_args)
-
-    def __call__(self, environ: Environ, start_response: StartResponse):
         try:
-            response = self.routing(environ)
+            response = self.resolve(path_info, environ)
             if response is None:
                 response = Response.create(404)
 

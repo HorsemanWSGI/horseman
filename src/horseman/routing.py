@@ -1,4 +1,5 @@
 import inspect
+import typing
 from autoroutes import Routes
 from http import HTTPStatus
 from horseman.meta import View, APIView, Overhead, APINode
@@ -58,23 +59,25 @@ def add_route(router, path: str, methods: list=None, **extras: dict):
 class RoutingNode(APINode):
 
     routes: Routes
-    request_factory: Overhead
+    request_factory: typing.Optional[Overhead]
 
     __slots__ = ('routes', 'request_factory')
 
     def route(self, path: str, methods: list=None, **extras: dict):
         return add_route(self.routes, path, methods, **extras)
 
-    def process_endpoint(self, environ, routing_args):
-        methods, params = routing_args  # unpacking the routing result
+    def process_endpoint(self, endpoint, environ, **payload):
+        if self.request_factory is not None:
+            request = self.request_factory(self, environ, **payload)
+        else:
+            request = None
+        return endpoint(request)
+
+    def resolve(self, path_info, environ):
+        methods, params = self.routes.match(path_info)
+        if methods is None:
+            return None
         endpoint = methods.get(environ['REQUEST_METHOD'])
         if endpoint is None:
             raise HTTPError(HTTPStatus.METHOD_NOT_ALLOWED)
-        request = self.request_factory(self, environ, **params)
-        return endpoint(request)
-
-    def lookup(self, path_info, environ):
-        found = self.routes.match(path_info)
-        if found == (None, None):
-            return None
-        return found
+        return self.process_endpoint(endpoint, environ, **params)
