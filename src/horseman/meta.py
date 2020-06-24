@@ -59,14 +59,8 @@ class APIView(View):
 class APINode(Node):
 
     @abstractmethod
-    def process_endpoint(self, endpoint, environ: Environ, **payload):
-        """Process the looked up endpoint and returns a WSGI callable.
-        """
-
-    @abstractmethod
-    def resolve(self, path_info: str, environ: Environ):
-        """Lookups up the endpoint and returns the routing args, usually
-        containing the possible conditional parameters and the controller.
+    def resolve(self, path_info: str, environ: Environ) -> WSGICallable:
+        """Resolves the path into a wsgi callable (eg. Response).
         If nothing was found, returns None or a WSGI callable corresponding
         to the HTTP Error (404, 405, 406).
         """
