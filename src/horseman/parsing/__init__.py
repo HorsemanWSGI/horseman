@@ -18,16 +18,19 @@ def query(query_string):
 
 
 def _json(body, content_type: str):
-    data = body.getvalue()
+    data = body.read()
     try:
-        return json.loads(data), Files()
+        jsondata = json.loads(data)
+        # We currently do not support non-object body
+        assert isinstance(jsondata, dict)
+        return Multidict(jsondata), Files()
     except (UnicodeDecodeError, JSONDecodeError):
         raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable JSON body')
 
 
 def _multipart(body, content_type: str, chunksize: int=4096):
     content_parser = Multipart(content_type)
-    content_parser.feed_data(body.getvalue())
+    content_parser.feed_data(body.read())
     return content_parser.form, content_parser.files
 
 
