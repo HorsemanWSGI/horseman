@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from typing import TypeVar
-from biscuits import Cookie
+from urllib.parse import parse_qs
+from biscuits import Cookie, parse
 
 
 HTTPCode = TypeVar('HTTPCode', HTTPStatus, int)
@@ -49,7 +50,7 @@ class Multidict(dict):
         return {k: v for k, v in self.dict_items()}
 
 
-class Query(Multidict):
+class TypeCastingDict(Multidict):
 
     TRUE_STRINGS = ('t', 'true', 'yes', '1', 'on')
     FALSE_STRINGS = ('f', 'false', 'no', '0', 'off')
@@ -85,9 +86,20 @@ class Query(Multidict):
                             "Key '{}' must be castable to float".format(key))
 
 
-class Form(Query):
-    """
-    """
+class Query(TypeCastingDict):
+
+    @classmethod
+    def from_value(cls, value: str):
+        return cls(parse_qs(
+            value, keep_blank_values=True, strict_parsing=True))
+
+    @classmethod
+    def from_environ(cls, environ: dict):
+        return cls.from_value(environ.get('QUERY_STRING', ''))
+
+
+class Form(TypeCastingDict):
+    pass
 
 
 class Files(Multidict):
@@ -100,3 +112,7 @@ class Cookies(dict):
 
     def set(self, name, *args, **kwargs):
         self[name] = Cookie(name, *args, **kwargs)
+
+    @staticmethod
+    def from_environ(environ: dict):
+        return parse(environ.get('HTTP_COOKIE', ''))
