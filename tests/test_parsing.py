@@ -82,3 +82,24 @@ def test_float_should_cast_to_float():
     query = Query.from_environ(request.environ)
     with pytest.raises(HTTPError):
         query.int('key')
+
+
+def test_multipart():
+    from io import BytesIO
+    from webtest.app import TestApp
+    from horseman.parsing import parse
+
+    app = TestApp(None)
+    content_type, body = app.encode_multipart(
+        [('test', b'some value')],
+        [('files[]', "baz-\xe9.png", b'abcdef', 'image/png'),
+         ('files[]', "MyText.txt", b'ghi', 'text/plain')])
+
+    form = parse(BytesIO(body), content_type)
+    assert len(form['files']) == 2
+    assert form['files'][0].filename == 'baz-é.png'
+    assert form['files'][0].content_type == b'image/png'
+    assert form['files'][0].read() == b'abcdef'
+    assert form['files'][1].filename == 'MyText.txt'
+    assert form['files'][1].content_type == b'text/plain'
+    assert form['files'][1].read() == b'ghi'
