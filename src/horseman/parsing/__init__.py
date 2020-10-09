@@ -1,6 +1,6 @@
 from http import HTTPStatus
 from horseman.parsing.multipart import Multipart
-from horseman.http import HTTPError, Query
+from horseman.http import HTTPError, Query, Multidict
 try:
     # In case you use json heavily, we recommend installing
     # https://pypi.python.org/pypi/ujson for better performances.
@@ -11,33 +11,30 @@ except ImportError:
     from json.decoder import JSONDecodeError
 
 
-def _json(body, content_type: str) -> dict:
+def _json(body, content_type: str):
     data = body.read()
     try:
         jsondata = json.loads(data)
         # We currently do not support non-object body
         assert isinstance(jsondata, dict)
-        return jsondata
+        return Multidict(jsondata), MultiDict()
     except (UnicodeDecodeError, JSONDecodeError):
         raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable JSON body')
 
 
-def _multipart(body, content_type: str, chunksize: int=4096) -> dict:
+def _multipart(body, content_type: str, chunksize: int=4096):
     content_parser = Multipart(content_type)
     content_parser.feed_data(body.read())
-    return {
-        **content_parser.form.to_dict(),
-        **content_parser.files.to_dict()
-    }
+    return content_parser.form, content_parser.files
 
 
-def _urlencoded(body, content_type: str) -> dict:
+def _urlencoded(body, content_type: str):
     data = body.read()
     try:
         form = Query.from_value(data.decode())
     except ValueError:
         raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable urlencoded body')
-    return form.to_dict()
+    return form, MultiDict()
 
 
 PARSERS = {
