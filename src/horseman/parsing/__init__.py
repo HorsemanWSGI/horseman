@@ -17,7 +17,7 @@ def _json(body, content_type: str):
         jsondata = json.loads(data)
         # We currently do not support non-object body
         assert isinstance(jsondata, dict)
-        return Multidict(jsondata), MultiDict()
+        return Multidict(jsondata), Multidict()
     except (UnicodeDecodeError, JSONDecodeError):
         raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable JSON body')
 
@@ -34,7 +34,7 @@ def _urlencoded(body, content_type: str):
         form = Query.from_value(data.decode())
     except ValueError:
         raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable urlencoded body')
-    return form, MultiDict()
+    return form, Multidict()
 
 
 PARSERS = {
