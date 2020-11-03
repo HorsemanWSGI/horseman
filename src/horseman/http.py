@@ -46,7 +46,7 @@ class Multidict(dict):
             else:
                 yield key, self.get(key)
 
-    def to_dict(self):
+    def dict(self):
         return {k: v for k, v in self.dict_items()}
 
 

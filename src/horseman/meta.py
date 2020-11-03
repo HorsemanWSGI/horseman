@@ -26,12 +26,13 @@ class Overhead(ABC):
     environ: Environ
 
     @abstractmethod
-    def __init__(self, node: Node, environ: Environ, **params):
-        pass
-
-    @abstractmethod
     def set_data(self, data):
         """Set the data coming from the processing of the action.
+        """
+
+    @abstractmethod
+    def get_data(self):
+        """Get the processed data.
         """
 
 
@@ -53,7 +54,6 @@ class APIView(View):
 
         # Method not allowed
         return Response.create(405)
-
 
 
 class APINode(Node):
