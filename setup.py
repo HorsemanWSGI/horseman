@@ -11,12 +11,12 @@ install_requires = [
     'setuptools',
     'biscuits',
     'multifruits',
-    'pydantic',
     'wrapt',
 ]
 
 test_requires = [
     'WebTest',
+    'pytest',
 ]
 
 
