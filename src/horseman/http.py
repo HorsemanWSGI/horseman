@@ -9,16 +9,16 @@ HTTPCode = TypeVar('HTTPCode', HTTPStatus, int)
 
 class HTTPError(Exception):
 
-    __slots__ = ('status', 'message')
+    __slots__ = ('status', 'body')
 
-    def __init__(self, http_code: HTTPCode, message: str=None):
+    def __init__(self, http_code: HTTPCode, body: str=None):
         self.status = HTTPStatus(http_code)
-        self.message = message or self.status.description
+        self.body = body or self.status.description
 
     def __bytes__(self):
         return b'HTTP/1.1 %a %b\r\nContent-Length: %a\r\n\r\n%b' % (
             self.status.value, self.status.phrase.encode(),
-            len(self.message), self.message)
+            len(self.body), self.body)
 
 
 class Multidict(dict):

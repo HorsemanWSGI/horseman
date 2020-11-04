@@ -72,7 +72,7 @@ def test_json_response():
     }
 
     app = webtest.TestApp(
-        horseman.response.json_reply(body=structure)
+        horseman.response.Response.to_json(body=structure)
     )
     response = app.get('/')
     assert response.status_int == 200
@@ -83,7 +83,7 @@ def test_json_response():
     ]
 
     app = webtest.TestApp(
-        horseman.response.json_reply(body=structure, headers={'Custom-Header': 'Test'})
+        horseman.response.Response.to_json(body=structure, headers={'Custom-Header': 'Test'})
     )
     response = app.get('/')
     assert response.status_int == 200
@@ -95,7 +95,7 @@ def test_json_response():
     ]
 
     app = webtest.TestApp(
-        horseman.response.json_reply(
+        horseman.response.Response.to_json(
             HTTPStatus.ACCEPTED, body=structure,
             headers={'Custom-Header': 'Test'})
     )
@@ -109,7 +109,7 @@ def test_json_response():
     ]
 
     app = webtest.TestApp(
-        horseman.response.json_reply(
+        horseman.response.Response.to_json(
             HTTPStatus.ACCEPTED, body=structure,
             headers={'Content-Type': 'wrong/content'})
     )
@@ -122,7 +122,7 @@ def test_json_response():
     ]
 
     app = webtest.TestApp(
-        horseman.response.json_reply(
+        horseman.response.Response.to_json(
             HTTPStatus.ACCEPTED, body=structure,
             headers={})
     )
@@ -137,4 +137,4 @@ def test_json_response():
 
 def test_json_errors():
     with pytest.raises(TypeError):
-        horseman.response.json_reply(body=object())
+        horseman.response.Response.to_json(body=object())

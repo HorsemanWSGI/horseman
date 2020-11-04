@@ -1,6 +1,6 @@
 from http import HTTPStatus
 from horseman.http import HTTPCode, Multidict
-from typing import Iterable, Callable, TypeVar
+from typing import Any, Iterable, Callable, TypeVar, Optional
 try:
     # In case you use json heavily, we recommend installing
     # https://pypi.python.org/pypi/ujson for better performances.
@@ -18,14 +18,24 @@ BODYLESS = frozenset((
 ))
 
 
-Headers = TypeVar('headers', dict, None)
+Headers = TypeVar('headers', Multidict, dict)
+
+
+def file_iterator(path, chunk=4096):
+    with open(path, 'rb') as reader:
+        while True:
+            data = reader.read(chunk)
+            if not data:
+                break
+            yield data
 
 
 class Response:
 
     __slots__ = ('status', 'body', 'headers')
 
-    def __init__(self, status: HTTPCode, body, headers: Headers):
+    def __init__(self, status: HTTPCode,
+                 body: Optional[Iterable], headers: Optional[Headers]):
         self.status = HTTPStatus(status)
         self.body = body
         self.headers = Multidict(headers or {})
@@ -35,7 +45,7 @@ class Response:
             yield key, str(value)
 
     def __call__(self, environ: dict, start_response: Callable) -> Iterable:
-        status = '{0} {1}'.format(self.status.value, self.status.phrase)
+        status = f'{self.status.value} {self.status.phrase}'
         start_response(status, list(self.headers_pair()))
         if self.status not in BODYLESS:
             if self.body is None:
@@ -49,34 +59,28 @@ class Response:
         return []
 
     @classmethod
-    def create(cls, code: HTTPCode, body: Iterable=None, headers: Headers=None):
-        return Response(HTTPStatus(code), body, headers)
+    def create(cls, code: HTTPCode=200,
+               body: Iterable=None, headers: Headers=None):
+        return cls(code, body, headers)
+
+    @classmethod
+    def to_json(cls, code: HTTPCode=200,
+                body: Optional[Any]=None, headers: Optional[Headers]=None):
+        data = json.dumps(body)
+        if headers is None:
+            headers = {'Content-Type': 'application/json'}
+        else:
+            headers['Content-Type'] = 'application/json'
+        return cls(code, data, headers)
+
+    @classmethod
+    def from_json(cls, code: HTTPCode=200,
+                  body: str='', headers: Optional[Headers]=None):
+        if headers is None:
+            headers = {'Content-Type': 'application/json'}
+        else:
+            headers['Content-Type'] = 'application/json'
+        return cls(code, body, headers)
 
 
-GenericError = Response(
-    500,
-    'An unexpected error occured. Please contact the administrator.',
-    headers={'Content-Type': 'text/plain'}
-)
-
-
-def reply(code: HTTPCode=200, body: Iterable=None, headers: Headers=None):
-    return Response.create(code, body, headers)
-
-
-def json_reply(code: HTTPCode=200, body: Iterable=None, headers: Headers=None):
-    data = json.dumps(body)
-    if headers is None:
-        headers = {'Content-Type': 'application/json'}
-    else:
-        headers['Content-Type'] = 'application/json'
-    return Response.create(code, data, headers)
-
-
-def file_iterator(path, chunk=4096):
-    with open(path, 'rb') as reader:
-        while True:
-            data = reader.read(chunk)
-            if not data:
-                break
-            yield data
+reply = Response.create
