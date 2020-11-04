@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from horseman.http import HTTPCode, Multidict
+from horseman.http import Multidict
+from horseman.prototyping import Environ, HTTPCode, StartResponse
 from typing import Any, Iterable, Callable, TypeVar, Optional
 try:
     # In case you use json heavily, we recommend installing
@@ -18,9 +19,6 @@ BODYLESS = frozenset((
 ))
 
 
-Headers = TypeVar('headers', Multidict, dict)
-
-
 def file_iterator(path, chunk=4096):
     with open(path, 'rb') as reader:
         while True:
@@ -32,10 +30,8 @@ def file_iterator(path, chunk=4096):
 
 class Response:
 
-    __slots__ = ('status', 'body', 'headers')
-
     def __init__(self, status: HTTPCode,
-                 body: Optional[Iterable], headers: Optional[Headers]):
+                 body: Optional[Iterable], headers: Optional[dict]):
         self.status = HTTPStatus(status)
         self.body = body
         self.headers = Multidict(headers or {})
@@ -44,7 +40,8 @@ class Response:
         for key, value in self.headers.items():
             yield key, str(value)
 
-    def __call__(self, environ: dict, start_response: Callable) -> Iterable:
+    def __call__(self, environ: Environ,
+                 start_response: StartResponse) -> Iterable:
         status = f'{self.status.value} {self.status.phrase}'
         start_response(status, list(self.headers_pair()))
         if self.status not in BODYLESS:
@@ -59,13 +56,13 @@ class Response:
         return []
 
     @classmethod
-    def create(cls, code: HTTPCode=200,
-               body: Iterable=None, headers: Headers=None):
+    def create(cls, code: HTTPCode=200, body: Optional[Iterable]=None,
+               headers: Optional[dict]=None):
         return cls(code, body, headers)
 
     @classmethod
-    def to_json(cls, code: HTTPCode=200,
-                body: Optional[Any]=None, headers: Optional[Headers]=None):
+    def to_json(cls, code: HTTPCode=200, body: Optional[Any]=None,
+                headers: Optional[dict]=None):
         data = json.dumps(body)
         if headers is None:
             headers = {'Content-Type': 'application/json'}
@@ -74,8 +71,8 @@ class Response:
         return cls(code, data, headers)
 
     @classmethod
-    def from_json(cls, code: HTTPCode=200,
-                  body: str='', headers: Optional[Headers]=None):
+    def from_json(cls, code: HTTPCode=200, body: str='',
+                  headers: Optional[dict]=None):
         if headers is None:
             headers = {'Content-Type': 'application/json'}
         else:

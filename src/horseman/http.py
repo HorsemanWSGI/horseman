@@ -2,17 +2,13 @@ from http import HTTPStatus
 from typing import TypeVar
 from urllib.parse import parse_qs
 from biscuits import Cookie, parse
-
-
-HTTPCode = TypeVar('HTTPCode', HTTPStatus, int)
+from horseman.prototyping import HTTPCode
 
 
 class HTTPError(Exception):
 
-    __slots__ = ('status', 'body')
-
-    def __init__(self, http_code: HTTPCode, body: str=None):
-        self.status = HTTPStatus(http_code)
+    def __init__(self, status: HTTPCode, body: str=None):
+        self.status = HTTPStatus(status)
         self.body = body or self.status.description
 
     def __bytes__(self):

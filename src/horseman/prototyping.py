@@ -1,16 +1,27 @@
-from typing import (
-    Any, Optional, Callable, Sequence, Mapping, Tuple, ByteString, Iterable)
-from typing import TypeVar
+from http import HTTPStatus
 from types import TracebackType
+from typing import (
+    Any,
+    ByteString,
+    Callable,
+    Iterable,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+)
 
 
+HTTPCode = TypeVar('HTTPCode', HTTPStatus, int)
 StatusCode = TypeVar('StatusCode', str, bytes)
+
 Environ = Mapping[str, Any]
-ResponseHeaders = Sequence[Tuple[str, str]]
 ExceptionInfo = Tuple[Exception, Any, TracebackType]
+ResponseHeaders = Sequence[Tuple[str, str]]
 StartResponse = Callable[
     [StatusCode, ResponseHeaders, Optional[ExceptionInfo]],
     Optional[Callable[[ByteString], None]]
 ]
-WSGICallable = Callable[[Environ, StartResponse], Iterable[bytes]]
 URLParameter = TypeVar('URLParameter')
+WSGICallable = Callable[[Environ, StartResponse], Iterable[bytes]]
