@@ -78,7 +78,7 @@ class APINode(Node):
 
         except HTTPError as error:
             # FIXME: Log.
-            response = Response.create(error.status, error.message)
+            response = Response.create(error.status, error.body)
         return response(environ, start_response)
 
 
