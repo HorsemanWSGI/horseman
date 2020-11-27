@@ -36,13 +36,8 @@ class Overhead(ABC):
         """
 
 
-class View(ABC):
-    pass
-
-
-class APIView(View):
-    """Implementation of an action as a class.
-    This works as an HTTP METHOD dispatcher.
+class APIView:
+    """View with methods to act as HTTP METHOD dispatcher.
     Method names of the class must be a valid uppercase HTTP METHOD name.
     example : OPTIONS, GET, POST
     """
