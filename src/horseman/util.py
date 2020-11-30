@@ -15,11 +15,8 @@ def view_methods(vw) -> List[Tuple[str, Callable]]:
     else:
         if isinstance(vw, APIView):
             predicate = lambda x: ismethod(x) and  x.__name__ in METHODS
-        elif isinstance(vw, View):
+        else:
             predicate = lambda x: (
                 ismethod(x) and not x.__name__.startswith('_'))
-        else:
-            raise NotImplementedError(
-                f'{vw} must be an instance of `horseman.meta.View`')
 
     return getmembers(vw, predicate=predicate)
