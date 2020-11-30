@@ -95,11 +95,11 @@ def test_multipart():
         [('files[]', "baz-\xe9.png", b'abcdef', 'image/png'),
          ('files[]', "MyText.txt", b'ghi', 'text/plain')])
 
-    form, files = parse(BytesIO(body), content_type)
-    assert len(files['files[]']) == 2
-    assert files['files[]'][0].filename == 'baz-é.png'
-    assert files['files[]'][0].content_type == b'image/png'
-    assert files['files[]'][0].read() == b'abcdef'
-    assert files['files[]'][1].filename == 'MyText.txt'
-    assert files['files[]'][1].content_type == b'text/plain'
-    assert files['files[]'][1].read() == b'ghi'
+    data = parse(BytesIO(body), content_type)
+    assert len(data.files['files[]']) == 2
+    assert data.files['files[]'][0].filename == 'baz-é.png'
+    assert data.files['files[]'][0].content_type == b'image/png'
+    assert data.files['files[]'][0].read() == b'abcdef'
+    assert data.files['files[]'][1].filename == 'MyText.txt'
+    assert data.files['files[]'][1].content_type == b'text/plain'
+    assert data.files['files[]'][1].read() == b'ghi'

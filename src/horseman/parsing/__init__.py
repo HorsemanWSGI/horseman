@@ -1,3 +1,4 @@
+import collections
 from http import HTTPStatus
 from horseman.parsing.multipart import Multipart
 from horseman.http import HTTPError, Query, Multidict
@@ -11,30 +12,35 @@ except ImportError:
     from json.decoder import JSONDecodeError
 
 
-def _json(body, content_type: str):
+ExtractionData = collections.namedtuple('Extracted', ['form', 'files', 'json'])
+
+
+def _json(body, content_type: str) -> ExtractionData:
     data = body.read()
     try:
         jsondata = json.loads(data)
-        # We currently do not support non-object body
-        assert isinstance(jsondata, dict)
-        return Multidict(jsondata), Multidict()
+        return ExtractionData(form=None, files=None, json=jsondata)
     except (UnicodeDecodeError, JSONDecodeError):
         raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable JSON body')
 
 
-def _multipart(body, content_type: str, chunksize: int=4096):
+def _multipart(body, content_type: str, chunksize: int=4096) -> ExtractionData:
     content_parser = Multipart(content_type)
     content_parser.feed_data(body.read())
-    return content_parser.form, content_parser.files
+    return ExtractionData(
+        form=content_parser.form,
+        files=content_parser.files,
+        json=None
+    )
 
 
-def _urlencoded(body, content_type: str):
+def _urlencoded(body, content_type: str) -> ExtractionData:
     data = body.read()
     try:
         form = Query.from_value(data.decode())
     except ValueError:
         raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable urlencoded body')
-    return form, Multidict()
+    return ExtractionData(form=form, files=None, json=None)
 
 
 PARSERS = {
@@ -44,7 +50,7 @@ PARSERS = {
 }
 
 
-def parse(body, content_type: str):
+def parse(body, content_type: str) -> ExtractionData:
     identifier = content_type.split(';', 1)[0].strip()
     parser = PARSERS.get(identifier)
     if parser is None:
