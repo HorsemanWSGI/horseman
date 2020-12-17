@@ -42,8 +42,8 @@ class APIView:
     example : OPTIONS, GET, POST
     """
 
-    def __call__(self, overhead: Overhead, environ: Environ) -> Response:
-        method = environ['REQUEST_METHOD'].upper()
+    def __call__(self, overhead: Overhead) -> Response:
+        method = overhead.environ['REQUEST_METHOD'].upper()
         if worker := getattr(self, method, None):
             return worker(overhead, environ)
 
