@@ -10,6 +10,7 @@ from typing import (
     Sequence,
     Tuple,
     TypeVar,
+    Literal
 )
 
 
@@ -25,3 +26,5 @@ StartResponse = Callable[
 ]
 URLParameter = TypeVar('URLParameter')
 WSGICallable = Callable[[Environ, StartResponse], Iterable[bytes]]
+HTTPMethod = Literal[
+    "GET", "HEAD", "PUT", "DELETE", "PATCH", "POST", "OPTIONS"]
