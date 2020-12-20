@@ -1,7 +1,5 @@
 import sys
 from abc import ABC, abstractmethod
-from typing import Dict
-
 from horseman.response import Response
 from horseman.http import HTTPError
 from horseman.prototyping import (
@@ -45,7 +43,7 @@ class APIView:
     def __call__(self, overhead: Overhead) -> Response:
         method = overhead.environ['REQUEST_METHOD'].upper()
         if worker := getattr(self, method, None):
-            return worker(overhead, environ)
+            return worker(overhead)
 
         # Method not allowed
         return Response.create(405)

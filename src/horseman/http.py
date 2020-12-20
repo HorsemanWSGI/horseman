@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from typing import TypeVar
 from urllib.parse import parse_qs
 from biscuits import Cookie, parse
 from horseman.prototyping import HTTPCode
@@ -7,7 +6,7 @@ from horseman.prototyping import HTTPCode
 
 class HTTPError(Exception):
 
-    def __init__(self, status: HTTPCode, body: str=None):
+    def __init__(self, status: HTTPCode, body: str = None):
         self.status = HTTPStatus(status)
         self.body = body or self.status.description
 

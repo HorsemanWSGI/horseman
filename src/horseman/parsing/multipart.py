@@ -1,7 +1,7 @@
 from io import BytesIO
 from http import HTTPStatus
 from multifruits import Parser, extract_filename, parse_content_disposition
-from horseman.http import Form, Files
+from horseman.http import Form, Files, HTTPError
 
 
 class Multipart:

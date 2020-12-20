@@ -1,5 +1,5 @@
-import collections
 from http import HTTPStatus
+from typing import Dict, List, NamedTuple, Optional, Union
 from horseman.parsing.multipart import Multipart
 from horseman.http import HTTPError, Query, Multidict
 try:
@@ -12,35 +12,44 @@ except ImportError:
     from json.decoder import JSONDecodeError
 
 
-ExtractionData = collections.namedtuple('Extracted', ['form', 'files', 'json'])
+class Data(NamedTuple):
+    form: Optional[Multidict]
+    files: Optional[Multidict]
+    json: Optional[Union[Dict, List]]  # not too specific
 
 
-def _json(body, content_type: str) -> ExtractionData:
+def _json(body, content_type: str) -> Data:
     data = body.read()
     try:
         jsondata = json.loads(data)
-        return ExtractionData(form=None, files=None, json=jsondata)
+        return Data(form=None, files=None, json=jsondata)
     except (UnicodeDecodeError, JSONDecodeError):
-        raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable JSON body')
+        raise HTTPError(
+            HTTPStatus.BAD_REQUEST,
+            'Unparsable JSON body'
+        )
 
 
-def _multipart(body, content_type: str, chunksize: int=4096) -> ExtractionData:
+def _multipart(body, content_type: str, chunksize: int = 4096) -> Data:
     content_parser = Multipart(content_type)
     content_parser.feed_data(body.read())
-    return ExtractionData(
+    return Data(
         form=content_parser.form,
         files=content_parser.files,
         json=None
     )
 
 
-def _urlencoded(body, content_type: str) -> ExtractionData:
+def _urlencoded(body, content_type: str) -> Data:
     data = body.read()
     try:
         form = Query.from_value(data.decode())
     except ValueError:
-        raise HTTPError(HTTPStatus.BAD_REQUEST, 'Unparsable urlencoded body')
-    return ExtractionData(form=form, files=None, json=None)
+        raise HTTPError(
+            HTTPStatus.BAD_REQUEST,
+            'Unparsable urlencoded body'
+        )
+    return Data(form=form, files=None, json=None)
 
 
 PARSERS = {
@@ -50,10 +59,12 @@ PARSERS = {
 }
 
 
-def parse(body, content_type: str) -> ExtractionData:
+def parse(body, content_type: str) -> Data:
     identifier = content_type.split(';', 1)[0].strip()
     parser = PARSERS.get(identifier)
     if parser is None:
         raise HTTPError(
-            HTTPStatus.BAD_REQUEST, f'Unknown content type: {content_type}')
+            HTTPStatus.BAD_REQUEST,
+            f'Unknown content type: {content_type}'
+        )
     return parser(body, content_type)

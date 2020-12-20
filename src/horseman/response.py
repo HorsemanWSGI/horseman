@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from horseman.http import Multidict
 from horseman.prototyping import Environ, HTTPCode, StartResponse
-from typing import Any, Iterable, Callable, TypeVar, Optional
+from typing import Any, Generator, Iterable, Optional, Tuple
 try:
     # In case you use json heavily, we recommend installing
     # https://pypi.python.org/pypi/ujson for better performances.
@@ -36,7 +36,7 @@ class Response:
         self.body = body
         self.headers = Multidict(headers or {})
 
-    def headers_pair(self):
+    def headers_pair(self) -> Generator[Tuple[str, str], None, None]:
         for key, value in self.headers.items():
             yield key, str(value)
 
@@ -56,13 +56,13 @@ class Response:
         return []
 
     @classmethod
-    def create(cls, code: HTTPCode=200, body: Optional[Iterable]=None,
-               headers: Optional[dict]=None):
+    def create(cls, code: HTTPCode = 200, body: Optional[Iterable] = None,
+               headers: Optional[dict] = None):
         return cls(code, body, headers)
 
     @classmethod
-    def to_json(cls, code: HTTPCode=200, body: Optional[Any]=None,
-                headers: Optional[dict]=None):
+    def to_json(cls, code: HTTPCode = 200, body: Optional[Any] = None,
+                headers: Optional[dict] = None):
         data = json.dumps(body)
         if headers is None:
             headers = {'Content-Type': 'application/json'}
@@ -71,8 +71,8 @@ class Response:
         return cls(code, data, headers)
 
     @classmethod
-    def from_json(cls, code: HTTPCode=200, body: str='',
-                  headers: Optional[dict]=None):
+    def from_json(cls, code: HTTPCode = 200, body: str = '',
+                  headers: Optional[dict] = None):
         if headers is None:
             headers = {'Content-Type': 'application/json'}
         else:
