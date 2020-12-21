@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from horseman.http import Multidict
+from horseman.http import Multidict, Cookies
 from horseman.prototyping import Environ, HTTPCode, StartResponse
 from typing import Any, Generator, Iterable, Optional, Tuple
 try:
@@ -31,10 +31,17 @@ def file_iterator(path, chunk=4096):
 class Response:
 
     def __init__(self, status: HTTPCode,
-                 body: Optional[Iterable], headers: Optional[dict]):
+                 body: Iterable, headers: Optional[dict]):
         self.status = HTTPStatus(status)
         self.body = body
         self.headers = Multidict(headers or {})
+        self._cookies = None
+
+    @property
+    def cookies(self):
+        if self._cookies is None:
+            self._cookies = Cookies()
+        return self._cookies
 
     def headers_pair(self) -> Generator[Tuple[str, str], None, None]:
         for key, value in self.headers.items():

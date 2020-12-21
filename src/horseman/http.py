@@ -70,15 +70,17 @@ class TypeCastingDict(Multidict):
         try:
             return int(self.get(key, default))
         except ValueError:
-            raise HTTPError(HTTPStatus.BAD_REQUEST,
-                            "Key '{}' must be castable to int".format(key))
+            raise HTTPError(
+                HTTPStatus.BAD_REQUEST,
+                "Key '{}' must be castable to int".format(key))
 
     def float(self, key: str, default=...):
         try:
             return float(self.get(key, default))
         except ValueError:
-            raise HTTPError(HTTPStatus.BAD_REQUEST,
-                            "Key '{}' must be castable to float".format(key))
+            raise HTTPError(
+                HTTPStatus.BAD_REQUEST,
+                "Key '{}' must be castable to float".format(key))
 
 
 class Query(TypeCastingDict):
@@ -90,7 +92,10 @@ class Query(TypeCastingDict):
 
     @classmethod
     def from_environ(cls, environ: dict):
-        return cls.from_value(environ.get('QUERY_STRING', ''))
+        qs = environ.get('QUERY_STRING', '')
+        if qs:
+            return cls.from_value(qs)
+        return cls()
 
 
 class Form(TypeCastingDict):
