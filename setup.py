@@ -38,7 +38,7 @@ setup(
         'License :: OSI Approved :: Zope Public License',
         'Programming Language :: Python:: 3 :: Only',
         ],
-    packages=find_packages('src'),
+    packages=find_packages(where='src'),
     package_dir={'': 'src'},
     include_package_data=True,
     zip_safe=False,
