@@ -17,6 +17,7 @@ install_requires = [
 test_requires = [
     'WebTest',
     'pytest',
+    'tox',
 ]
 
 
