@@ -68,6 +68,18 @@ class Response:
         return cls(code, body, headers)
 
     @classmethod
+    def redirect(cls, location, code: HTTPCode = 303,
+                 body: Optional[Iterable] = None,
+                 headers: Optional[dict] = None):
+        assert code in (300, 301, 302, 303, 304, 307, 308), (
+            f"{code}: unknown redirection code.")
+        if not headers:
+            headers = {'Location': location}
+        else:
+            headers['Location'] = location
+        return cls(code, body, headers)
+
+    @classmethod
     def to_json(cls, code: HTTPCode = 200, body: Optional[Any] = None,
                 headers: Optional[dict] = None):
         data = json.dumps(body)
@@ -88,3 +100,4 @@ class Response:
 
 
 reply = Response.create
+redirect = Response.redirect

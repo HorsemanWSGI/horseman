@@ -138,3 +138,25 @@ def test_json_response():
 def test_json_errors():
     with pytest.raises(TypeError):
         horseman.response.Response.to_json(body=object())
+
+
+def test_redirect():
+    response = horseman.response.Response.redirect('/test')
+    assert response.headers == {'Location': '/test'}
+    assert response.body == None
+    assert response.status == 303
+    assert webtest.TestApp(response).get('/').body == (
+        b'Object moved -- see Method and URL list')
+
+    response = horseman.response.Response.redirect('/test', code=301)
+    assert response.headers == {'Location': '/test'}
+    assert response.body == None
+    assert response.status == 301
+    assert webtest.TestApp(response).get('/').body == (
+        b'Object moved permanently -- see URI list')
+
+
+def test_invalid_redirect():
+    with pytest.raises(AssertionError) as exc:
+        horseman.response.Response.redirect('/test', code=400)
+    assert str(exc.value) == '400: unknown redirection code.'
