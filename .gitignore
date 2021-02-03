@@ -1,6 +1,9 @@
 # This is the repository-wide ignore file. Suffixes below are ignored
 # i.e. committing not allowed.
 
+# conf
+.tox
+
 # archives
 *.tar
 *.tar.gz
@@ -22,6 +25,12 @@
 build/
 dist/
 
+# pyvenv
+bin/
+lib/
+lib64
+pyvenv.cfg
+share/
 
 # miscellaneous
 *.orig
