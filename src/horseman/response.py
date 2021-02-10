@@ -46,6 +46,9 @@ class Response:
     def headers_pair(self) -> Generator[Tuple[str, str], None, None]:
         for key, value in self.headers.items():
             yield key, str(value)
+        if self._cookies:
+            for cookie in self._cookies.values():
+                yield 'Set-Cookie', str(cookie)
 
     def __call__(self, environ: Environ,
                  start_response: StartResponse) -> Iterable:

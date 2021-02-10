@@ -1,6 +1,8 @@
+from webtest.app import TestRequest
+from horseman.http import Cookies
+
+
 def test_request_parse_cookies():
-    from webtest.app import TestRequest
-    from horseman.http import Cookies
 
     # A simple cookie
     request = TestRequest(environ={}, cookies={'key': 'value'})

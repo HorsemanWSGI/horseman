@@ -160,3 +160,17 @@ def test_invalid_redirect():
     with pytest.raises(AssertionError) as exc:
         horseman.response.Response.redirect('/test', code=400)
     assert str(exc.value) == '400: unknown redirection code.'
+
+
+def test_response_cookies():
+    from biscuits import Cookie
+
+    response = horseman.response.Response.create()
+    assert response.cookies == {}
+
+    response.cookies.set('test', "{'this': 'is json'}")
+    assert 'test' in response.cookies
+    assert list(webtest.TestApp(response).get('/').headers.items()) == [
+        ('Set-Cookie', 'test="{\'this\': \'is json\'}"; Path=/'),
+        ('Content-Length', '35')
+    ]
