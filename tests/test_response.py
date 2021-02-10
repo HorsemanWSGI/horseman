@@ -163,8 +163,6 @@ def test_invalid_redirect():
 
 
 def test_response_cookies():
-    from biscuits import Cookie
-
     response = horseman.response.Response.create()
     assert response.cookies == {}
 
