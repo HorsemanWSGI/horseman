@@ -83,6 +83,17 @@ class Response:
         return cls(code, body, headers)
 
     @classmethod
+    def from_file_iterator(cls, filename: str, body: Iterable[bytes],
+                headers: Optional[dict] = None):
+        if headers is None:
+            headers = {
+                "Content-Disposition": f"attachment;filename={filename}"}
+        elif not "Content-Disposition" in headers:
+            headers["Content-Disposition"] = (
+                f"attachment;filename={filename}")
+        return cls(200, body, headers)
+
+    @classmethod
     def to_json(cls, code: HTTPCode = 200, body: Optional[Any] = None,
                 headers: Optional[dict] = None):
         data = json.dumps(body)
