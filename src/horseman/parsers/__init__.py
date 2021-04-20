@@ -3,31 +3,16 @@ import cgi
 import orjson
 from functools import wraps
 from http import HTTPStatus
-from typing import TypeVar, Optional, Union
-from typing import Dict, List, NamedTuple, IO, Callable
+from typing import Optional, Union, Dict, List, NamedTuple, IO, Callable
 from horseman.parsers.multipart import Multipart
 from horseman.http import HTTPError, Query, Multidict
-
-
-MIMEType = TypeVar('MIMEType', str, bytes)
+from horseman.types import MIMEType
 
 
 class Data(NamedTuple):
     form: Optional[Multidict] = None
     files: Optional[Multidict] = None
     json: Optional[Union[Dict, List]] = None  # not too specific
-
-
-class ContentType(NamedTuple):
-    raw: str
-    mimetype: MIMEType
-    options: dict
-
-    @classmethod
-    def from_http_header(cls, header: str):
-        return cls(header, *cgi.parse_header(ct))
-
-
 
 
 Parser = Callable[[IO, MIMEType], Data]
