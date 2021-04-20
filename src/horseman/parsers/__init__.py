@@ -1,7 +1,5 @@
 import re
-import cgi
 import orjson
-from functools import wraps
 from http import HTTPStatus
 from typing import Optional, Union, Dict, List, NamedTuple, IO, Callable
 from horseman.parsers.multipart import Multipart

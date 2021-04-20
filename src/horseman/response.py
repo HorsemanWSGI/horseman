@@ -79,11 +79,11 @@ class Response:
 
     @classmethod
     def from_file_iterator(cls, filename: str, body: Iterable[bytes],
-                headers: Optional[dict] = None):
+                           headers: Optional[dict] = None):
         if headers is None:
             headers = {
                 "Content-Disposition": f"attachment;filename={filename}"}
-        elif not "Content-Disposition" in headers:
+        elif "Content-Disposition" not in headers:
             headers["Content-Disposition"] = (
                 f"attachment;filename={filename}")
         return cls(200, body, headers)

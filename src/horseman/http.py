@@ -27,7 +27,6 @@ class ContentType(NamedTuple):
         return cls(*cgi.parse_header(header))
 
 
-
 class Multidict(dict):
     """Data structure to deal with several values for the same key.
 

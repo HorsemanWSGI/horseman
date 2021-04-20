@@ -3,12 +3,14 @@ from io import BytesIO
 from horseman.parsers import parser
 from horseman.http import HTTPError
 
+
 BAD_MULTIPART = b"""
 --foo
 Content->Disposition: form-data; name="text1"
 
 'abc\r\n--foo--
 """
+
 
 def test_multipart():
     from webtest.app import TestApp

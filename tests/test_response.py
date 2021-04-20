@@ -30,7 +30,7 @@ def test_representation_with_body():
     )
     response = app.get('/')
     assert response.status_int == 200
-    assert response.body ==  b'Super'
+    assert response.body == b'Super'
     assert list(response.headers.items()) == [('Content-Length', '5')]
 
 
@@ -40,7 +40,7 @@ def test_representation_bodyless_with_body():
     )
     response = app.get('/')
     assert response.status_int == 204
-    assert response.body ==  b''
+    assert response.body == b''
     assert list(response.headers.items()) == []
 
 
@@ -50,7 +50,7 @@ def test_304_no_content_type():
     )
     response = app.get('/')
     assert response.status_int == 304
-    assert response.body ==  b''
+    assert response.body == b''
     assert list(response.headers.items()) == []
 
 
@@ -60,7 +60,7 @@ def test_1XX_no_content_type():
     )
     response = app.get('/', status=100)
     assert response.status_int == 100
-    assert response.body ==  b''
+    assert response.body == b''
     assert list(response.headers.items()) == []
 
 
@@ -76,18 +76,20 @@ def test_json_response():
     )
     response = app.get('/')
     assert response.status_int == 200
-    assert response.body ==  b'{"Horseman":"headless","python3.8":true,"version":0.1}'
+    assert response.body == (
+        b'{"Horseman":"headless","python3.8":true,"version":0.1}')
     assert list(response.headers.items()) == [
         ('Content-Type', 'application/json'),
         ('Content-Length', '54')
     ]
 
     app = webtest.TestApp(
-        horseman.response.Response.to_json(body=structure, headers={'Custom-Header': 'Test'})
-    )
+        horseman.response.Response.to_json(
+            body=structure, headers={'Custom-Header': 'Test'}))
     response = app.get('/')
     assert response.status_int == 200
-    assert response.body ==  b'{"Horseman":"headless","python3.8":true,"version":0.1}'
+    assert response.body == (
+        b'{"Horseman":"headless","python3.8":true,"version":0.1}')
     assert list(response.headers.items()) == [
         ('Custom-Header', 'Test'),
         ('Content-Type', 'application/json'),
@@ -101,7 +103,8 @@ def test_json_response():
     )
     response = app.get('/')
     assert response.status_int == 202
-    assert response.body ==  b'{"Horseman":"headless","python3.8":true,"version":0.1}'
+    assert response.body == (
+        b'{"Horseman":"headless","python3.8":true,"version":0.1}')
     assert list(response.headers.items()) == [
         ('Custom-Header', 'Test'),
         ('Content-Type', 'application/json'),
@@ -115,7 +118,8 @@ def test_json_response():
     )
     response = app.get('/')
     assert response.status_int == 202
-    assert response.body ==  b'{"Horseman":"headless","python3.8":true,"version":0.1}'
+    assert response.body == (
+        b'{"Horseman":"headless","python3.8":true,"version":0.1}')
     assert list(response.headers.items()) == [
         ('Content-Type', 'application/json'),
         ('Content-Length', '54')
@@ -128,7 +132,8 @@ def test_json_response():
     )
     response = app.get('/')
     assert response.status_int == 202
-    assert response.body ==  b'{"Horseman":"headless","python3.8":true,"version":0.1}'
+    assert response.body == (
+        b'{"Horseman":"headless","python3.8":true,"version":0.1}')
     assert list(response.headers.items()) == [
         ('Content-Type', 'application/json'),
         ('Content-Length', '54')
@@ -143,14 +148,14 @@ def test_json_errors():
 def test_redirect():
     response = horseman.response.Response.redirect('/test')
     assert response.headers == {'Location': '/test'}
-    assert response.body == None
+    assert response.body is None
     assert response.status == 303
     assert webtest.TestApp(response).get('/').body == (
         b'Object moved -- see Method and URL list')
 
     response = horseman.response.Response.redirect('/test', code=301)
     assert response.headers == {'Location': '/test'}
-    assert response.body == None
+    assert response.body is None
     assert response.status == 301
     assert webtest.TestApp(response).get('/').body == (
         b'Object moved permanently -- see URI list')
