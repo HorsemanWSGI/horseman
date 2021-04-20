@@ -76,10 +76,10 @@ def test_json_response():
     )
     response = app.get('/')
     assert response.status_int == 200
-    assert response.body ==  b'{"Horseman": "headless", "python3.8": true, "version": 0.1}'
+    assert response.body ==  b'{"Horseman":"headless","python3.8":true,"version":0.1}'
     assert list(response.headers.items()) == [
         ('Content-Type', 'application/json'),
-        ('Content-Length', '59')
+        ('Content-Length', '54')
     ]
 
     app = webtest.TestApp(
@@ -87,11 +87,11 @@ def test_json_response():
     )
     response = app.get('/')
     assert response.status_int == 200
-    assert response.body ==  b'{"Horseman": "headless", "python3.8": true, "version": 0.1}'
+    assert response.body ==  b'{"Horseman":"headless","python3.8":true,"version":0.1}'
     assert list(response.headers.items()) == [
         ('Custom-Header', 'Test'),
         ('Content-Type', 'application/json'),
-        ('Content-Length', '59')
+        ('Content-Length', '54')
     ]
 
     app = webtest.TestApp(
@@ -101,11 +101,11 @@ def test_json_response():
     )
     response = app.get('/')
     assert response.status_int == 202
-    assert response.body ==  b'{"Horseman": "headless", "python3.8": true, "version": 0.1}'
+    assert response.body ==  b'{"Horseman":"headless","python3.8":true,"version":0.1}'
     assert list(response.headers.items()) == [
         ('Custom-Header', 'Test'),
         ('Content-Type', 'application/json'),
-        ('Content-Length', '59')
+        ('Content-Length', '54')
     ]
 
     app = webtest.TestApp(
@@ -115,10 +115,10 @@ def test_json_response():
     )
     response = app.get('/')
     assert response.status_int == 202
-    assert response.body ==  b'{"Horseman": "headless", "python3.8": true, "version": 0.1}'
+    assert response.body ==  b'{"Horseman":"headless","python3.8":true,"version":0.1}'
     assert list(response.headers.items()) == [
         ('Content-Type', 'application/json'),
-        ('Content-Length', '59')
+        ('Content-Length', '54')
     ]
 
     app = webtest.TestApp(
@@ -128,10 +128,10 @@ def test_json_response():
     )
     response = app.get('/')
     assert response.status_int == 202
-    assert response.body ==  b'{"Horseman": "headless", "python3.8": true, "version": 0.1}'
+    assert response.body ==  b'{"Horseman":"headless","python3.8":true,"version":0.1}'
     assert list(response.headers.items()) == [
         ('Content-Type', 'application/json'),
-        ('Content-Length', '59')
+        ('Content-Length', '54')
     ]
 
 

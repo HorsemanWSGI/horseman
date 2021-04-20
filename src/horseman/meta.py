@@ -2,7 +2,7 @@ import sys
 from abc import ABC, abstractmethod
 from horseman.response import Response
 from horseman.http import HTTPError
-from horseman.prototyping import (
+from horseman.types import (
     WSGICallable, Environ, StartResponse, ExceptionInfo)
 
 

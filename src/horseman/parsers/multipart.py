@@ -1,5 +1,6 @@
 from io import BytesIO
 from http import HTTPStatus
+from typing import IO
 from multifruits import Parser, extract_filename, parse_content_disposition
 from horseman.http import Form, Files, HTTPError
 
@@ -62,18 +63,3 @@ class Multipart:
                 self.form[name] = []
             self.form[name].append(self._current)
         self._current = None
-
-
-def read_multipart(content_type):
-    parser = Multipart(content_type)
-    while True:
-        chunk = yield
-        if not chunk:
-            yield parser.form, parser.files
-            break
-        try:
-            parser.feed_data(chunk)
-        except ValueError:
-            raise HTTPError(
-                HTTPStatus.BAD_REQUEST,
-                'Unparsable multipart body')

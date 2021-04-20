@@ -14,6 +14,7 @@ from typing import (
 )
 
 
+MIMEType = TypeVar('MIMEType', str, bytes)
 HTTPCode = TypeVar('HTTPCode', HTTPStatus, int)
 StatusCode = TypeVar('StatusCode', str, bytes)
 
@@ -24,7 +25,9 @@ StartResponse = Callable[
     [StatusCode, ResponseHeaders, Optional[ExceptionInfo]],
     Optional[Callable[[ByteString], None]]
 ]
+
 URLParameter = TypeVar('URLParameter')
 WSGICallable = Callable[[Environ, StartResponse], Iterable[bytes]]
 HTTPMethod = Literal[
-    "GET", "HEAD", "PUT", "DELETE", "PATCH", "POST", "OPTIONS"]
+    "GET", "HEAD", "PUT", "DELETE", "PATCH", "POST", "OPTIONS"
+]

@@ -1,13 +1,8 @@
+import orjson
 from http import HTTPStatus
 from horseman.http import Multidict, Cookies
-from horseman.prototyping import Environ, HTTPCode, StartResponse
+from horseman.types import Environ, HTTPCode, StartResponse
 from typing import Any, Generator, Iterable, Optional, Tuple
-try:
-    # In case you use json heavily, we recommend installing
-    # https://pypi.python.org/pypi/ujson for better performances.
-    import ujson as json
-except ImportError:
-    import json as json
 
 
 BODYLESS = frozenset((
@@ -96,7 +91,7 @@ class Response:
     @classmethod
     def to_json(cls, code: HTTPCode = 200, body: Optional[Any] = None,
                 headers: Optional[dict] = None):
-        data = json.dumps(body)
+        data = orjson.dumps(body)
         if headers is None:
             headers = {'Content-Type': 'application/json'}
         else:

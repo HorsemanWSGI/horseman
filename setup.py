@@ -8,9 +8,10 @@ version = "0.1"
 
 install_requires = [
     'autoroutes >= 0.2.0',
-    'setuptools',
     'biscuits',
     'multifruits',
+    'orjson',
+    'setuptools',
     'wrapt',
 ]
 

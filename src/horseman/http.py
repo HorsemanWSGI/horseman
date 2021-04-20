@@ -1,7 +1,9 @@
+import cgi
+import typing
 from http import HTTPStatus
 from urllib.parse import parse_qs
 from biscuits import Cookie, parse
-from horseman.prototyping import HTTPCode
+from horseman.types import HTTPCode, MIMEType
 
 
 class HTTPError(Exception):
@@ -14,6 +16,16 @@ class HTTPError(Exception):
         return b'HTTP/1.1 %a %b\r\nContent-Length: %a\r\n\r\n%b' % (
             self.status.value, self.status.phrase.encode(),
             len(self.body), self.body)
+
+
+class ContentType(typing.NamedTuple):
+    raw: str
+    mimetype: MIMEType
+    options: dict
+
+    @classmethod
+    def from_http_header(cls, header: str):
+        return cls(header, *cgi.parse_header(ct))
 
 
 class Multidict(dict):
