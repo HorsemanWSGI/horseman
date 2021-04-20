@@ -5,8 +5,11 @@ from functools import wraps
 from http import HTTPStatus
 from typing import Optional, Union, Dict, List, NamedTuple, IO, Callable
 from horseman.parsers.multipart import Multipart
-from horseman.http import HTTPError, Query, Multidict
-from horseman.types import MIMEType
+from horseman.http import HTTPError, ContentType, Query, Multidict
+from horseman.types import Charset, MIMEType
+
+
+MIME_TYPE_REGEX = re.compile(r"^multipart|[-\w.]+/[-\w.\+]+$")
 
 
 class Data(NamedTuple):
@@ -15,11 +18,13 @@ class Data(NamedTuple):
     json: Optional[Union[Dict, List]] = None  # not too specific
 
 
-Parser = Callable[[IO, MIMEType], Data]
-MIME_TYPE_REGEX = re.compile(r"^multipart|[-\w.]+/[-\w.\+]+$")
+Boundary = str
+Parser = Callable[[
+    IO, MIMEType, Optional[Union[Charset, Boundary]]
+], Data]
 
 
-class BodyParser(Parser):
+class BodyParser:
 
     __slots__ = ('parsers',)
 
@@ -28,7 +33,7 @@ class BodyParser(Parser):
 
     def register(self, mimetype: MIMEType):
         if not MIME_TYPE_REGEX.fullmatch(mimetype):
-            raise ValueError(f'{mimetype!r} is not a valid MIME Type')
+            raise ValueError(f'{mimetype!r} is not a valid MIME Type.')
 
         def registration(parser: Parser) -> Parser:
             self.parsers[mimetype.lower()] = parser
@@ -36,18 +41,22 @@ class BodyParser(Parser):
         return registration
 
     def get(self, mimetype: MIMEType) -> Optional[Parser]:
-        return self.parsers.get(mimetype.lower())
+        return self.parsers.get(mimetype)
 
-    def __call__(self, body: IO, mimetype: MIMEType) -> Data:
-        identifier = mimetype.split(';', 1)[0].strip()
-        parser = self.get(identifier)
+    def __call__(self, body: IO, header: Union[str, ContentType]) -> Data:
+        if not isinstance(header, ContentType):
+            content_type = ContentType.from_http_header(header)
+        else:
+            content_type = header
+        parser = self.get(content_type.mimetype)
         if parser is None:
             raise HTTPError(
                 HTTPStatus.BAD_REQUEST,
-                f'Unknown content type: {mimetype}.'
+                f'Unknown content type: {content_type.mimetype!r}.'
             )
         try:
-            return parser(body, mimetype)
+            return parser(
+                body, content_type.mimetype, **content_type.options)
         except ValueError as exc:
             raise HTTPError(HTTPStatus.BAD_REQUEST, str(exc))
 
@@ -56,19 +65,23 @@ parser = BodyParser()
 
 
 @parser.register('application/json')
-def json_parser(body: IO, mimetype: MIMEType) -> Data:
+def json_parser(body: IO, mimetype: MIMEType,
+                charset: Charset = 'utf-8') -> Data:
     data = body.read()
     try:
-        jsondata = orjson.loads(data)
+        jsondata = orjson.loads(data.decode(charset))
         return Data(json=jsondata)
     except orjson.JSONDecodeError:
-        raise ValueError('Unparsable JSON body')
+        raise ValueError('Unparsable JSON body.')
 
 
 @parser.register('multipart/form-data')
-def multipart_parser(body: IO, mimetype: MIMEType) -> Data:
-    content_parser = Multipart(mimetype)
-    while chunk := body.read(8128):
+def multipart_parser(body: IO, mimetype: MIMEType,
+                     boundary: Optional[str] = None) -> Data:
+    if boundary is None:
+        raise ValueError('Missing boundary in Content-Type.')
+    content_parser = Multipart(f";boundary={boundary}")
+    while chunk := body.read(8192):
         try:
             content_parser.feed_data(chunk)
         except ValueError:
@@ -77,7 +90,11 @@ def multipart_parser(body: IO, mimetype: MIMEType) -> Data:
 
 
 @parser.register('application/x-www-form-urlencoded')
-def urlencoded_parser(body: IO, mimetype: MIMEType) -> Data:
+def urlencoded_parser(body: IO, mimetype: MIMEType,
+                      charset: Charset = 'utf-8') -> Data:
     data = body.read()
-    form = Query.from_value(data.decode())
+    try:
+        form = Query.from_value(data.decode(charset))
+    except UnicodeDecodeError:
+        raise ValueError(f'Failed to decode using charset {charset!r}.')
     return Data(form=form)

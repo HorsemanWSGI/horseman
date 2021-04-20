@@ -1,5 +1,5 @@
 import cgi
-import typing
+from typing import NamedTuple
 from http import HTTPStatus
 from urllib.parse import parse_qs
 from biscuits import Cookie, parse
@@ -18,14 +18,14 @@ class HTTPError(Exception):
             len(self.body), self.body)
 
 
-class ContentType(typing.NamedTuple):
-    raw: str
+class ContentType(NamedTuple):
     mimetype: MIMEType
     options: dict
 
     @classmethod
     def from_http_header(cls, header: str):
-        return cls(header, *cgi.parse_header(ct))
+        return cls(*cgi.parse_header(header))
+
 
 
 class Multidict(dict):

@@ -38,6 +38,6 @@ def test_wrong_multipart():
 
     with pytest.raises(HTTPError) as exc:
         parser(BytesIO(BAD_MULTIPART),
-               "multipart/form-data;boundary=--foo")
+               "multipart/form-data; boundary=--foo")
     assert exc.value.status == 400
     assert exc.value.body == 'Unparsable multipart body.'

@@ -14,6 +14,7 @@ from typing import (
 )
 
 
+Charset = TypeVar('Charset', str, bytes)
 MIMEType = TypeVar('MIMEType', str, bytes)
 HTTPCode = TypeVar('HTTPCode', HTTPStatus, int)
 StatusCode = TypeVar('StatusCode', str, bytes)
