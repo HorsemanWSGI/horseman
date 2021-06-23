@@ -7,18 +7,14 @@ from setuptools import setup, find_packages
 version = "0.1"
 
 install_requires = [
-    'autoroutes >= 0.2.0',
-    'biscuits',
-    'multifruits',
-    'orjson',
-    'setuptools',
-    'wrapt',
+    'biscuits >= 0.3.0',
+    'multifruits >= 0.1.5 ',
+    'orjson >= 3.5',
 ]
 
 test_requires = [
     'WebTest',
     'pytest',
-    'tox',
 ]
 
 
