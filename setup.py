@@ -8,7 +8,7 @@ version = "0.1"
 
 install_requires = [
     'biscuits >= 0.3.0',
-    'multifruits >= 0.1.5 ',
+    'multifruits >= 0.1.5',
     'orjson >= 3.5',
 ]
 

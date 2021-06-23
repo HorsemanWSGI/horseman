@@ -67,7 +67,7 @@ def json_parser(body: IO, mimetype: MIMEType,
                 charset: Charset = 'utf-8') -> Data:
     data = body.read()
     if not data:
-        raise ValueError(f'The body of the request is empty.')
+        raise ValueError('The body of the request is empty.')
     try:
         jsondata = orjson.loads(data.decode(charset))
         return Data(json=jsondata)
@@ -94,7 +94,7 @@ def urlencoded_parser(body: IO, mimetype: MIMEType,
                       charset: Charset = 'utf-8') -> Data:
     data = body.read()
     if not data:
-        raise ValueError(f'The body of the request is empty.')
+        raise ValueError('The body of the request is empty.')
     try:
         form = Query.from_value(data.decode(charset))
     except UnicodeDecodeError:

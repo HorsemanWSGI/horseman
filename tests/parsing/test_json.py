@@ -3,6 +3,13 @@ from io import BytesIO
 from horseman.parsers import Data, json_parser
 
 
+def test_empty_json():
+    body = BytesIO(b'')
+    with pytest.raises(ValueError) as exc:
+        json_parser(body, 'application/json')
+    assert str(exc.value) == "The body of the request is empty."
+
+
 def test_json():
     body = BytesIO(b'{"foo": "bar"}')
     data = json_parser(body, 'application/json')

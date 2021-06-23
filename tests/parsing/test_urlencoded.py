@@ -3,6 +3,13 @@ from io import BytesIO
 from horseman.parsers import Data, urlencoded_parser
 
 
+def test_empty_urlencoded():
+    body = BytesIO(b'')
+    with pytest.raises(ValueError) as exc:
+        urlencoded_parser(body, 'application/x-www-form-urlencoded')
+    assert str(exc.value) == "The body of the request is empty."
+
+
 def test_urlencoded():
     body = BytesIO(b'name=MacBeth&thane=Cawdor&thane=Glamis')
     data = urlencoded_parser(body, 'application/x-www-form-urlencoded')
