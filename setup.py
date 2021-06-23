@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-
 import os
 from setuptools import setup, find_packages
-
 
 version = "0.1"
 
@@ -17,24 +14,30 @@ test_requires = [
     'pytest',
 ]
 
-
 setup(
     name='horseman',
     version=version,
     author='Souheil CHELFOUH',
     author_email='trollfot@gmail.com',
-    url='http://gitweb.dolmen-project.org',
+    url='https://github.com/HorsemanWSGI/horseman',
     download_url='http://pypi.python.org/pypi/horseman',
     description='Headless WSGI API',
-    long_description=(open("README.txt").read() + "\n" +
-                      open(os.path.join("docs", "HISTORY.txt")).read()),
+    long_description=(
+        open("README.rst").read() + "\n" +
+        open(os.path.join("docs", "HISTORY.rst")).read()
+    ),
     license='ZPL',
     classifiers=[
+        'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Zope Public License',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python:: 3 :: Only',
-        ],
+        'Topic :: Internet :: WWW/HTTP :: WSGI',
+    ],
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     include_package_data=True,
