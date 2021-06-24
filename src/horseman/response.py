@@ -1,6 +1,6 @@
 import orjson
 from http import HTTPStatus
-from horseman.http import Multidict, Cookies
+from horseman.http import Cookies
 from horseman.types import Environ, HTTPCode, StartResponse
 from typing import Any, Generator, Iterable, Optional, Tuple
 
@@ -11,6 +11,17 @@ BODYLESS = frozenset((
     HTTPStatus.PROCESSING,
     HTTPStatus.NO_CONTENT,
     HTTPStatus.NOT_MODIFIED
+))
+
+REDIRECT = frozenset((
+    HTTPStatus.MULTIPLE_CHOICES,
+    HTTPStatus.MOVED_PERMANENTLY,
+    HTTPStatus.FOUND,
+    HTTPStatus.SEE_OTHER,
+    HTTPStatus.NOT_MODIFIED,
+    HTTPStatus.USE_PROXY,
+    HTTPStatus.TEMPORARY_REDIRECT,
+    HTTPStatus.PERMANENT_REDIRECT
 ))
 
 
@@ -29,7 +40,7 @@ class Response:
                  body: Iterable, headers: Optional[dict]):
         self.status = HTTPStatus(status)
         self.body = body
-        self.headers = Multidict(headers or {})
+        self.headers = headers or {}
         self._cookies = None
 
     @property
@@ -45,20 +56,26 @@ class Response:
             for cookie in self._cookies.values():
                 yield 'Set-Cookie', str(cookie)
 
+    def __iter__(self) -> Generator[bytes, None, None]:
+        if self.status not in BODYLESS:
+            if self.body is None:
+                yield self.status.description.encode()
+            elif isinstance(self.body, bytes):
+                yield self.body
+            elif isinstance(self.body, str):
+                yield self.body.encode()
+            elif isinstance(self.body, Generator):
+                yield from self.body
+            else:
+                raise TypeError(
+                    f'Body of type {type(self.body)!r} is not supported.'
+                )
+
     def __call__(self, environ: Environ,
                  start_response: StartResponse) -> Iterable:
         status = f'{self.status.value} {self.status.phrase}'
         start_response(status, list(self.headers_pair()))
-        if self.status not in BODYLESS:
-            if self.body is None:
-                return [self.status.description.encode()]
-            if isinstance(self.body, bytes):
-                return [self.body]
-            elif isinstance(self.body, str):
-                return [self.body.encode()]
-            else:
-                return self.body
-        return []
+        return self
 
     @classmethod
     def create(cls, code: HTTPCode = 200, body: Optional[Iterable] = None,
@@ -69,8 +86,8 @@ class Response:
     def redirect(cls, location, code: HTTPCode = 303,
                  body: Optional[Iterable] = None,
                  headers: Optional[dict] = None):
-        assert code in (300, 301, 302, 303, 304, 307, 308), (
-            f"{code}: unknown redirection code.")
+        if not code in REDIRECT:
+            raise ValueError(f"{code}: unknown redirection code.")
         if not headers:
             headers = {'Location': location}
         else:

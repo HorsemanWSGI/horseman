@@ -1,7 +1,9 @@
 import pytest
 import webtest
+from unittest.mock import Mock
 from http import HTTPStatus
 import horseman.response
+
 
 
 def test_can_set_status_from_numeric_value():
@@ -12,6 +14,18 @@ def test_can_set_status_from_numeric_value():
 def test_raises_if_code_is_unknown():
     with pytest.raises(ValueError):
         horseman.response.Response.create(999)
+
+
+def test_wrong_body_type():
+    environ = {
+        'PATH_INFO': '/'
+    }
+    response = horseman.response.Response.create(200, body=object())
+    start_response = Mock()
+    with pytest.raises(TypeError):
+        list(response(environ, start_response))
+
+    start_response.assert_called_with('200 OK', [])
 
 
 def test_bytes_representation_bodyless():
@@ -36,7 +50,8 @@ def test_representation_with_body():
 
 def test_representation_bodyless_with_body():
     app = webtest.TestApp(
-        horseman.response.Response.create(HTTPStatus.NO_CONTENT, body="Super")
+        horseman.response.Response.create(
+            HTTPStatus.NO_CONTENT, body="Super")
     )
     response = app.get('/')
     assert response.status_int == 204
@@ -162,7 +177,7 @@ def test_redirect():
 
 
 def test_invalid_redirect():
-    with pytest.raises(AssertionError) as exc:
+    with pytest.raises(ValueError) as exc:
         horseman.response.Response.redirect('/test', code=400)
     assert str(exc.value) == '400: unknown redirection code.'
 

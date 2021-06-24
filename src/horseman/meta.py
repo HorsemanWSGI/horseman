@@ -85,18 +85,14 @@ class SentryNode(APINode):
 
     def __call__(self, environ: Environ, start_response: StartResponse):
         iterable = None
-
         try:
             iterable = super().__call__(environ, start_response)
-            for event in iterable:
-                yield event
-
+            yield from iterable
         except Exception:
             exc_info = sys.exc_info()
             self.handle_exception(exc_info, environ)
             exc_info = None
             raise
-
         finally:
             if hasattr(iterable, 'close'):
                 try:
