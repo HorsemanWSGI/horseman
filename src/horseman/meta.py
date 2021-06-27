@@ -6,16 +6,6 @@ from horseman.types import (
     WSGICallable, Environ, StartResponse, ExceptionInfo)
 
 
-class Node(WSGICallable):
-
-    @abstractmethod
-    def __call__(self,
-                 environ: Environ,
-                 start_response: StartResponse):
-        """Abstract class to represent an application node.
-        """
-
-
 class Overhead(ABC):
     """WSGI Environ Overhead aka Request representation
     This object contains everything needed to handle a request.
@@ -49,7 +39,7 @@ class APIView:
         return Response.create(405)
 
 
-class APINode(Node):
+class Node(WSGICallable):
 
     @abstractmethod
     def resolve(self, path_info: str, environ: Environ) -> WSGICallable:
@@ -75,7 +65,7 @@ class APINode(Node):
         return response(environ, start_response)
 
 
-class SentryNode(APINode):
+class SentryNode(Node):
 
     @abstractmethod
     def handle_exception(self, exc_info: ExceptionInfo, environ: Environ):

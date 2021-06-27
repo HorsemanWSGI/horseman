@@ -2,23 +2,23 @@ import pytest
 import logging
 from webtest import TestApp as WSGIApp
 from horseman.response import Response
-from horseman.meta import APINode, SentryNode
+from horseman.meta import Node, SentryNode
 from horseman.http import HTTPError
 
 
-class TestAPINode:
+class TestNode:
 
     def test_direct_instance(self):
         with pytest.raises(TypeError) as exc:
-            APINode()
+            Node()
         assert str(exc.value) == (
-            "Can't instantiate abstract class APINode "
+            "Can't instantiate abstract class Node "
             "with abstract methods resolve"
         )
 
     def test_call(self):
 
-        class MyNode(APINode):
+        class MyNode(Node):
 
             def resolve(self, path_info, environ):
                 if path_info == "/test":
@@ -34,7 +34,7 @@ class TestAPINode:
 
     def test_error_handling(self):
 
-        class MyNode(APINode):
+        class MyNode(Node):
 
             def resolve(self, path_info, environ):
                 raise HTTPError(400, 'This is a dead end')
@@ -43,7 +43,6 @@ class TestAPINode:
         response = node.get("/", expect_errors=True)
         assert response.status == "400 Bad Request"
         assert response.body == b'This is a dead end'
-
 
 
 class TestSentryNode:
