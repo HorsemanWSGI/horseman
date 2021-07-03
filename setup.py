@@ -5,6 +5,7 @@ version = "0.1"
 
 install_requires = [
     'biscuits >= 0.3.0',
+    'multidict >= 5.1',
     'multifruits >= 0.1.5',
     'orjson >= 3.5',
 ]
@@ -12,6 +13,7 @@ install_requires = [
 test_requires = [
     'WebTest',
     'pytest',
+    'pyhamcrest',
 ]
 
 setup(

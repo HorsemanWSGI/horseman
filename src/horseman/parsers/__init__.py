@@ -2,8 +2,9 @@ import re
 import orjson
 from http import HTTPStatus
 from typing import Optional, Union, Dict, List, NamedTuple, IO, Callable
+from multidict import MultiDict
 from horseman.parsers.multipart import Multipart
-from horseman.http import HTTPError, ContentType, Query, Multidict
+from horseman.http import HTTPError, ContentType, Query
 from horseman.types import Charset, MIMEType
 
 
@@ -11,8 +12,8 @@ MIME_TYPE_REGEX = re.compile(r"^multipart|[-\w.]+/[-\w.\+]+$")
 
 
 class Data(NamedTuple):
-    form: Optional[Multidict] = None
-    files: Optional[Multidict] = None
+    form: Optional[MultiDict] = None
+    files: Optional[MultiDict] = None
     json: Optional[Union[Dict, List]] = None  # not too specific
 
 

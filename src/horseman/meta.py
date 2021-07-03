@@ -36,7 +36,7 @@ class APIView:
             return worker(overhead)
 
         # Method not allowed
-        return Response.create(405)
+        return Response(405)
 
 
 class Node(WSGICallable):
@@ -57,11 +57,11 @@ class Node(WSGICallable):
         try:
             response = self.resolve(path_info, environ)
             if response is None:
-                response = Response.create(404)
+                response = Response(404)
 
         except HTTPError as error:
             # FIXME: Log.
-            response = Response.create(error.status, error.body)
+            response = Response(error.status, error.body)
         return response(environ, start_response)
 
 

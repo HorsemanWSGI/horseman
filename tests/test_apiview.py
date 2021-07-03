@@ -21,7 +21,7 @@ def test_apiview():
     class View(APIView):
 
         def GET(self, overhead):
-            return Response.create(200, b'You got it.')
+            return Response(200, b'You got it.')
 
     environ = {'REQUEST_METHOD': 'GET'}
     request = Request(environ)
@@ -42,10 +42,10 @@ def test_api_view_multiple_methods():
     class View(APIView):
 
         def GET(self, overhead):
-            return Response.create(200, b'You got it.')
+            return Response(body=b'You got it.')
 
         def POST(self, overhead):
-            return Response.create(200, b'You posted it.')
+            return Response(body=b'You posted it.')
 
     environ = {'REQUEST_METHOD': 'GET'}
     request = Request(environ)

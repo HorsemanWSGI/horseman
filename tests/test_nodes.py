@@ -22,7 +22,7 @@ class TestNode:
 
             def resolve(self, path_info, environ):
                 if path_info == "/test":
-                    return Response.create(200, body=b"Some Content")
+                    return Response(body=b"Some Content")
 
         node = WSGIApp(MyNode())
         response = node.get("/", expect_errors=True)

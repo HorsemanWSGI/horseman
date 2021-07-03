@@ -1,8 +1,9 @@
 import cgi
-from typing import NamedTuple
 from http import HTTPStatus
-from urllib.parse import parse_qs
+from typing import NamedTuple, Dict
+from urllib.parse import parse_qsl
 from biscuits import Cookie, parse
+from multidict import MultiDict
 from horseman.types import HTTPCode, MIMEType
 
 
@@ -27,40 +28,10 @@ class ContentType(NamedTuple):
         return cls(*cgi.parse_header(header))
 
 
-class Multidict(dict):
-    """Data structure to deal with several values for the same key.
-
-    Useful for query string parameters or form-like POSTed ones.
-    """
-
-    def get(self, key: str, default=...):
-        return self.getlist(key, [default])[0]
-
-    def getlist(self, key: str, default=...):
-        try:
-            return self[key]
-        except KeyError:
-            if default is ... or default == [...]:
-                raise HTTPError(HTTPStatus.BAD_REQUEST,
-                                "Missing '{}' key".format(key))
-            return default
-
-    def dict_items(self):
-        for key in self.keys():
-            if key.endswith('[]'):
-                yield key[:-2], self.getlist(key)
-            else:
-                yield key, self.get(key)
-
-    def dict(self):
-        return {k: v for k, v in self.dict_items()}
-
-
-class TypeCastingDict(Multidict):
-
-    TRUE_STRINGS = ('t', 'true', 'yes', '1', 'on')
-    FALSE_STRINGS = ('f', 'false', 'no', '0', 'off')
-    NONE_STRINGS = ('n', 'none', 'null')
+class TypeCastingDict(MultiDict):
+    TRUE_STRINGS = {'t', 'true', 'yes', '1', 'on'}
+    FALSE_STRINGS = {'f', 'false', 'no', '0', 'off'}
+    NONE_STRINGS = {'n', 'none', 'null'}
 
     def bool(self, key: str, default=...):
         value = self.get(key, default)
@@ -73,32 +44,20 @@ class TypeCastingDict(Multidict):
             return False
         elif value in self.NONE_STRINGS:
             return None
-        raise HTTPError(
-            HTTPStatus.BAD_REQUEST,
-            "Wrong boolean value for '{}={}'".format(key, self.get(key)))
+        raise ValueError(f"Can't cast {value!r} to boolean.")
 
     def int(self, key: str, default=...):
-        try:
-            return int(self.get(key, default))
-        except ValueError:
-            raise HTTPError(
-                HTTPStatus.BAD_REQUEST,
-                "Key '{}' must be castable to int".format(key))
+        return int(self.get(key, default))
 
     def float(self, key: str, default=...):
-        try:
-            return float(self.get(key, default))
-        except ValueError:
-            raise HTTPError(
-                HTTPStatus.BAD_REQUEST,
-                "Key '{}' must be castable to float".format(key))
+        return float(self.get(key, default))
 
 
 class Query(TypeCastingDict):
 
     @classmethod
     def from_value(cls, value: str):
-        return cls(parse_qs(
+        return cls(parse_qsl(
             value, keep_blank_values=True, strict_parsing=True))
 
     @classmethod
@@ -109,16 +68,7 @@ class Query(TypeCastingDict):
         return cls()
 
 
-class Form(TypeCastingDict):
-    pass
-
-
-class Files(Multidict):
-    """
-    """
-
-
-class Cookies(dict):
+class Cookies(Dict[str, Cookie]):
     """A Cookies management class, built on top of biscuits."""
 
     def set(self, name, *args, **kwargs):

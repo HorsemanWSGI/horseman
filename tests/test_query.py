@@ -1,6 +1,6 @@
 import pytest
 from webtest.app import TestRequest as Request
-from horseman.http import Query, HTTPError
+from horseman.http import Query
 
 
 def test_float_should_cast_to_float():
@@ -22,12 +22,12 @@ def test_float_should_cast_to_float():
 
     request = Request.blank('/?key=-75,5', method='GET')
     query = Query.from_environ(request.environ)
-    with pytest.raises(HTTPError):
+    with pytest.raises(ValueError):
         query.int('key')
 
     request = Request.blank('/?key=dang!', method='GET')
     query = Query.from_environ(request.environ)
-    with pytest.raises(HTTPError):
+    with pytest.raises(ValueError):
         query.int('key')
 
 
@@ -49,8 +49,9 @@ def test_bool_should_cast_to_boolean():
 
     request = Request.blank('/?key=Z', method='GET')
     query = Query.from_environ(request.environ)
-    with pytest.raises(HTTPError):
+    with pytest.raises(ValueError) as exc:
         query.bool('key')
+    assert str(exc.value) == "Can't cast 'z' to boolean."
 
 
 def test_int_should_cast_to_int():
@@ -68,10 +69,10 @@ def test_int_should_cast_to_int():
 
     request = Request.blank('/?key=75.5', method='GET')
     query = Query.from_environ(request.environ)
-    with pytest.raises(HTTPError):
+    with pytest.raises(ValueError):
         query.int('key')
 
     request = Request.blank('/?key=dang!', method='GET')
     query = Query.from_environ(request.environ)
-    with pytest.raises(HTTPError):
+    with pytest.raises(ValueError):
         query.int('key')

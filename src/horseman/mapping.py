@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Mapping
+from typing import Mapping
 from collections import UserDict
 from horseman.meta import Node
 from horseman.types import WSGICallable, Environ

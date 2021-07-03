@@ -1,5 +1,6 @@
 import pytest
 from io import BytesIO
+from horseman.http import Query
 from horseman.parsers import Data, urlencoded_parser
 
 
@@ -13,23 +14,22 @@ def test_empty_urlencoded():
 def test_urlencoded():
     body = BytesIO(b'name=MacBeth&thane=Cawdor&thane=Glamis')
     data = urlencoded_parser(body, 'application/x-www-form-urlencoded')
-    assert data == Data(
-        form={
-            'name': ['MacBeth'],
-            'thane': ['Cawdor', 'Glamis']
-        },
-        files=None,
-        json=None
+    assert data.files is None
+    assert data.json is None
+    assert tuple(data.form.items()) == (
+        ('name', 'MacBeth'),
+        ('thane', 'Cawdor'),
+        ('thane', 'Glamis')
     )
 
 
 def test_urlencoded_charset():
     body = BytesIO("name=Älfùr".encode('utf-8'))
     data = urlencoded_parser(body, 'application/x-www-form-urlencoded')
-    assert data == Data(
-        form={'name': ['Älfùr']},
-        files=None,
-        json=None
+    assert data.files is None
+    assert data.json is None
+    assert tuple(data.form.items()) == (
+        ('name', 'Älfùr'),
     )
 
     body = BytesIO("name=Älfùr".encode('latin-1'))
@@ -40,12 +40,11 @@ def test_urlencoded_charset():
     body = BytesIO("name=Älfùr".encode('latin-1'))
     data = urlencoded_parser(
         body, 'application/x-www-form-urlencoded', charset='latin-1')
-    assert data == Data(
-        form={'name': ['Älfùr']},
-        files=None,
-        json=None
+    assert data.files is None
+    assert data.json is None
+    assert tuple(data.form.items()) == (
+        ('name', 'Älfùr'),
     )
-
 
 def test_wrong_urlencoded():
     body = BytesIO(b'foo')
