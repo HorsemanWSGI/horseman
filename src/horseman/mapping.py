@@ -22,6 +22,7 @@ class Mapping(Node, UserDict, Mapping[str, WSGICallable]):
         for script_name in sorted(self.keys(), key=len, reverse=True):
             if path_info.startswith(script_name):
                 script = self[script_name]
-                environ['SCRIPT_NAME'] += script_name
-                environ['PATH_INFO'] = path_info[len(script_name):]
+                name = script_name.rstrip('/')
+                environ['SCRIPT_NAME'] += name
+                environ['PATH_INFO'] = path_info[len(name):]
                 return script
