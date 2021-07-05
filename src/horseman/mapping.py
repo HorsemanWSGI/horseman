@@ -10,10 +10,12 @@ class Mapping(Node, UserDict, Mapping[str, WSGICallable]):
     NORMALIZE = re.compile('//+')
 
     @classmethod
-    def normalize(self, path: str):
+    def normalize(cls, path: str):
+        if not isinstance(path, str):
+            raise ValueError(f'{cls} accepts only str keys.')
         if not path.startswith('/'):
             raise ValueError(f"Path must start with '/', got {path!r}")
-        return self.NORMALIZE.sub('/', path)
+        return cls.NORMALIZE.sub('/', path)
 
     def __setitem__(self, path: str, script: WSGICallable):
         super().__setitem__(self.normalize(path), script)

@@ -9,12 +9,19 @@ def basic_app(environ, start_fn):
     return [b"Hello World!\n"]
 
 
+def other_app(environ, start_fn):
+    start_fn('200 OK', [('Content-Type', 'text/plain')])
+    return [b"Something else\n"]
+
+
 def test_mapping():
     node = Mapping()
     assert isinstance(node, Node)
 
 
 def test_normalizing():
+    with pytest.raises(ValueError):
+        assert Mapping.normalize(1)
     assert Mapping.normalize('/test') == '/test'
     assert Mapping.normalize("/") == '/'
     assert Mapping.normalize("////") == '/'
@@ -38,6 +45,36 @@ def test_mapping_instanciation():
     assert node == { '/': basic_app }
 
 
+def test_mapping_update():
+    node = Mapping({"/test": basic_app})
+    with pytest.raises(ValueError) as exc:
+        node.update({1: basic_app})
+
+    node.update({'/test': other_app})
+    assert node['/test'] is other_app
+
+
+def test_mapping_set_default():
+    node = Mapping()
+    node.setdefault('/test', basic_app)
+    assert node['/test'] is basic_app
+
+
+def test_mapping_items():
+    node = Mapping({"/test": basic_app, '/other': other_app})
+    assert list(node.items()) == [
+        ('/test', basic_app),
+        ('/other', other_app)
+    ]
+
+
+def test_mapping_repr():
+    node = Mapping({"/test": basic_app, '/other': other_app})
+    assert repr(node) == (
+        f"{{'/test': {basic_app}, '/other': {other_app}}}"
+    )
+
+
 def test_mapping_set_del_item():
     node = Mapping()
     node['/'] = basic_app
@@ -54,6 +91,10 @@ def test_mapping_set_del_item():
     node['/'] = basic_app
     assert node == { '/': basic_app }
 
+    script = node.pop('/')
+    assert script is basic_app
+    assert node == {}
+
 
 def test_mapping_resolve():
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/no'}
@@ -65,6 +106,11 @@ def test_mapping_resolve():
     node = Mapping({"/test": basic_app})
     assert node.resolve('/test', environ) is basic_app
     assert environ == {'PATH_INFO': '', 'SCRIPT_NAME': '/test'}
+
+    environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/'}
+    node = Mapping({"/": basic_app})
+    assert node.resolve('/', environ) is basic_app
+    assert environ == {'PATH_INFO': '/', 'SCRIPT_NAME': ''}
 
 
 def test_nested_mapping():
