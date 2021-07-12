@@ -3,6 +3,12 @@ from webtest.app import TestRequest as Request
 from horseman.http import Query
 
 
+def test_query():
+    q = Query.from_environ({})
+    assert isinstance(q, Query)
+    assert len(q) == 0
+
+
 def test_float_should_cast_to_float():
     request = Request.blank('/?key=1', method='GET')
     query = Query.from_environ(request.environ)
@@ -52,6 +58,11 @@ def test_bool_should_cast_to_boolean():
     with pytest.raises(ValueError) as exc:
         query.bool('key')
     assert str(exc.value) == "Can't cast 'z' to boolean."
+
+    q = Query({'foo': True, 'bar': False, 'crux': None})
+    assert q.bool('foo') is True
+    assert q.bool('bar') is False
+    assert q.bool('crux') is None
 
 
 def test_int_should_cast_to_int():

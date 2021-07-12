@@ -85,7 +85,7 @@ def multipart_parser(body: IO, mimetype: MIMEType,
     while chunk := body.read(8192):
         try:
             content_parser.feed_data(chunk)
-        except ValueError:
+        except ValueError as exc:
             raise ValueError('Unparsable multipart body.')
     return Data(form=content_parser.form, files=content_parser.files)
 

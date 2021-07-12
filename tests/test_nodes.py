@@ -1,5 +1,6 @@
 import pytest
 import logging
+from unittest.mock import Mock
 from webtest import TestApp as WSGIApp
 from horseman.response import Response
 from horseman.meta import Node, SentryNode
@@ -103,3 +104,38 @@ class TestSentryNode:
 
         assert len(caplog.records) == 1
         assert caplog.records[0].message == 'I closed'
+
+    def test_close_exception(self, caplog):
+
+        error = NotImplementedError("I don't know what to do !")
+
+        class Response:
+
+            def __iter__(self):
+                yield b'I am done'
+
+            def close(self):
+                raise error
+
+            def __call__(self, environ, start_response):
+                start_response('200 OK', [])
+                return self
+
+
+        handle = Mock()
+
+        class MyNode(SentryNode):
+
+            def handle_exception(self, exc_info, environ):
+                cls, exc, tb = exc_info
+                handle(exc)
+
+            def resolve(self, path_info, environ):
+                return Response()
+
+        node = WSGIApp(MyNode())
+        with pytest.raises(NotImplementedError):
+            node.get("/")
+
+        assert handle.call_count == 1
+        handle.assert_called_once_with(error)

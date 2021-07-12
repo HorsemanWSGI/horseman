@@ -33,7 +33,8 @@ class Multipart:
         disposition_type, params = parse_content_disposition(
             self._current_headers.get(b'Content-Disposition'))
         if not disposition_type:
-            return
+            raise ValueError('Content-Disposition is missing.')
+
         self._current_params = params
         if b'Content-Type' in self._current_headers:
             self._current = BytesIO()
