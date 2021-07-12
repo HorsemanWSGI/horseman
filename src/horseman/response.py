@@ -1,5 +1,4 @@
 import orjson
-from collections import deque
 from http import HTTPStatus
 from pathlib import Path
 from multidict import CIMultiDict
@@ -28,7 +27,7 @@ REDIRECT = frozenset((
 ))
 
 
-def file_iterator(path: Path, chunk: int  = 4096):
+def file_iterator(path: Path, chunk: int = 4096):
     with path.open('rb') as reader:
         while True:
             data = reader.read(chunk)

@@ -11,7 +11,13 @@ Content->Disposition: form-data; name="text1"
 'abc\r\n--foo--
 """
 
-BAD_MULTIPART_NO_CONTENT_DISPOSITION = b"""------------a_BoUnDaRy7283067873172754$\r\nContent-Disposition: ; name="test"\r\n\r\nsome value\r\n------------a_BoUnDaRy7283067873172754$--\r\n"""
+BAD_MULTIPART_NO_CONTENT_DISPOSITION = b"""
+------------a_BoUnDaRy7283067873172754$
+Content-Disposition: ; name="test"
+
+some value
+------------a_BoUnDaRy7283067873172754$--
+"""
 
 
 def test_multipart():
@@ -51,7 +57,8 @@ def test_wrong_multipart_no_content_disposition():
 
     with pytest.raises(HTTPError) as exc:
         parser(BytesIO(BAD_MULTIPART_NO_CONTENT_DISPOSITION),
-               'multipart/form-data; boundary=----------a_BoUnDaRy7283067873172754$')
+               'multipart/form-data; '
+               'boundary=----------a_BoUnDaRy7283067873172754$')
 
     assert exc.value.status == 400
     assert exc.value.body == ('Unparsable multipart body.')
