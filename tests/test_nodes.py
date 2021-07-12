@@ -10,12 +10,9 @@ from horseman.http import HTTPError
 class TestNode:
 
     def test_direct_instance(self):
+        # Can't instanciate directly a class with abstract methods.
         with pytest.raises(TypeError) as exc:
             Node()
-        assert str(exc.value) == (
-            "Can't instantiate abstract class Node "
-            "with abstract methods resolve"
-        )
 
     def test_call(self):
 
