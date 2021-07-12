@@ -53,12 +53,8 @@ class Multipart:
     def on_part_complete(self):
         name = self._current_params.get(b'name', b'').decode()
         if b'Content-Type' in self._current_headers:
-            if name not in self.files:
-                self.files[name] = []
             self._current.seek(0)
-            self.files[name].append(self._current)
+            self.files.add(name, self._current)
         else:
-            if name not in self.form:
-                self.form[name] = []
-            self.form[name].append(self._current)
+            self.form.add(name, self._current)
         self._current = None
