@@ -1,4 +1,3 @@
-import webtest
 from horseman.meta import APIView, Overhead
 from horseman.response import Response
 

@@ -11,7 +11,7 @@ class TestNode:
 
     def test_direct_instance(self):
         # Can't instanciate directly a class with abstract methods.
-        with pytest.raises(TypeError) as exc:
+        with pytest.raises(TypeError):
             Node()
 
     def test_call(self):
@@ -54,7 +54,6 @@ class TestSentryNode:
         )
 
     def test_call(self, caplog):
-        import traceback
 
         class MyNode(SentryNode):
 
@@ -86,7 +85,6 @@ class TestSentryNode:
                 start_response('200 OK', [])
                 return self
 
-
         class MyNode(SentryNode):
 
             def handle_exception(self, exc_info, environ):
@@ -117,7 +115,6 @@ class TestSentryNode:
             def __call__(self, environ, start_response):
                 start_response('200 OK', [])
                 return self
-
 
         handle = Mock()
 

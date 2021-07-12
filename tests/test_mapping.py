@@ -29,19 +29,19 @@ def test_mapping_instanciation():
     assert str(exc.value) == "Path must start with '/', got 'test'"
 
     node = Mapping({"/test": basic_app})
-    assert node == { '/test': basic_app }
+    assert node == {'/test': basic_app}
 
     node = Mapping({"/": basic_app})
-    assert node == { '/': basic_app }
+    assert node == {'/': basic_app}
 
     node = Mapping({"////": basic_app})
-    assert node == { '/': basic_app }
+    assert node == {'/': basic_app}
 
 
 def test_mapping_set_del_item():
     node = Mapping()
     node['/'] = basic_app
-    assert node == { '/': basic_app }
+    assert node == {'/': basic_app}
 
     with pytest.raises(ValueError) as exc:
         node['test'] = basic_app
@@ -52,7 +52,7 @@ def test_mapping_set_del_item():
 
     node['/'] = 1
     node['/'] = basic_app
-    assert node == { '/': basic_app }
+    assert node == {'/': basic_app}
 
 
 def test_mapping_resolve():

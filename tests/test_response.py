@@ -5,7 +5,6 @@ from http import HTTPStatus
 from horseman.response import Response, file_iterator
 
 
-
 def test_file_iterator(tmpdir):
 
     fpath = tmpdir / 'test.txt'
@@ -122,16 +121,16 @@ def test_1XX_no_content_type():
 
 
 def test_json_response_headers():
-     response = Response.from_json(body="{}")
-     assert list(response.headers.items()) == [
-         ('Content-Type', 'application/json')
-     ]
+    response = Response.from_json(body="{}")
+    assert list(response.headers.items()) == [
+        ('Content-Type', 'application/json')
+    ]
 
-     response = Response.from_json(
-         body="{}", headers={"Content-Type": "text/html"})
-     assert list(response.headers.items()) == [
-         ('Content-Type', 'application/json')
-     ]
+    response = Response.from_json(
+        body="{}", headers={"Content-Type": "text/html"})
+    assert list(response.headers.items()) == [
+        ('Content-Type', 'application/json')
+    ]
 
 
 def test_json_response():

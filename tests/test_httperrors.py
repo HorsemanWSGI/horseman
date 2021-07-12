@@ -36,7 +36,6 @@ def test_exception():
         b'Content-Length: 21\r\n\r\nWorks with bytes body'
     )
 
-
     with pytest.raises(ValueError) as exc:
         HTTPError(200, 200)
     assert str(exc.value) == "Body must be string or bytes."
