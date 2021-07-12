@@ -1,9 +1,13 @@
 import sys
 from abc import ABC, abstractmethod
+from typing import TypeVar
 from horseman.response import Response
 from horseman.http import HTTPError
 from horseman.types import (
     WSGICallable, Environ, StartResponse, ExceptionInfo)
+
+
+Data = TypeVar('Data')
 
 
 class Overhead(ABC):
@@ -11,16 +15,12 @@ class Overhead(ABC):
     This object contains everything needed to handle a request.
     It can carry DB connectors, parsed data and other utils.
     """
+    data: Data
     environ: Environ
 
     @abstractmethod
-    def set_data(self, data):
-        """Set the data coming from the processing of the action.
-        """
-
-    @abstractmethod
-    def get_data(self):
-        """Get the processed data.
+    def extract(self) -> Data:
+        """Extracts the data from the incoming HTTP request.
         """
 
 

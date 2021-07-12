@@ -63,3 +63,26 @@ def test_headers_coalescence():
         ('X-Robots-Tag', 'google: noindex, nosnippet'),
         ('X-Robots-Tag', 'otherbot: noindex'),
     ]
+
+
+def test_headers_coalescence_with_cookies():
+    headers = Headers()
+    headers.cookies.set('test', "{'this': 'is json'}")
+    headers.add('X-Robots-Tag', 'otherbot: noindex')
+
+    hamcrest.assert_that(
+        list(headers.coalesced_items()),
+        hamcrest.contains_inanyorder(
+            ('X-Robots-Tag', 'otherbot: noindex'),
+            ('Set-Cookie', 'test="{\'this\': \'is json\'}"; Path=/')
+        )
+    )
+
+    headers.add('Set-Cookie', 'other=foobar')
+    hamcrest.assert_that(
+        list(headers.coalesced_items()),
+        hamcrest.contains_inanyorder(
+            ('X-Robots-Tag', 'otherbot: noindex'),
+            ('Set-Cookie', 'other=foobar, test="{\'this\': \'is json\'}"; Path=/')
+        )
+    )

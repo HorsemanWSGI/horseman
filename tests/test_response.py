@@ -28,6 +28,23 @@ def test_file_iterator(tmpdir):
     ]
     assert list(response) == [b'This is a sentence']
 
+    response = Response.from_file_iterator(
+        'test.txt', file_iterator(fpath),
+        headers={"Content-Type": "foo"}
+    )
+    assert list(response.headers.items()) == [
+        ('Content-Type', 'foo'),
+        ('Content-Disposition', 'attachment;filename=test.txt')
+    ]
+
+    response = Response.from_file_iterator(
+        'test.txt', file_iterator(fpath),
+        headers={"Content-Disposition": "foobar"}
+    )
+    assert list(response.headers.items()) == [
+        ('Content-Disposition', 'foobar')
+    ]
+
 
 def test_can_set_status_from_numeric_value():
     response = Response(202)
@@ -102,6 +119,19 @@ def test_1XX_no_content_type():
     assert response.status_int == 100
     assert response.body == b''
     assert list(response.headers.items()) == []
+
+
+def test_json_response_headers():
+     response = Response.from_json(body="{}")
+     assert list(response.headers.items()) == [
+         ('Content-Type', 'application/json')
+     ]
+
+     response = Response.from_json(
+         body="{}", headers={"Content-Type": "text/html"})
+     assert list(response.headers.items()) == [
+         ('Content-Type', 'application/json')
+     ]
 
 
 def test_json_response():
@@ -194,6 +224,15 @@ def test_redirect():
         b'Object moved -- see Method and URL list')
 
     response = Response.redirect('/test', code=301)
+    assert list(response.headers.items()) == [('Location', '/test')]
+    assert response.body is None
+    assert response.status == 301
+    assert webtest.TestApp(response).get('/').body == (
+        b'Object moved permanently -- see URI list'
+    )
+
+    response = Response.redirect(
+        '/test', code=301, headers={"Location": "/outside"})
     assert list(response.headers.items()) == [('Location', '/test')]
     assert response.body is None
     assert response.status == 301

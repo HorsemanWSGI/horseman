@@ -5,15 +5,13 @@ from horseman.response import Response
 
 class Request(Overhead):
 
+    data = None
+
     def __init__(self, environ):
         self.environ = environ
-        self.data = None
 
-    def set_data(self, data):
-        self.data = data
-
-    def get_data(self):
-        return self.data
+    def extract(self):
+        self.data = 'somedata'
 
 
 def test_apiview():
