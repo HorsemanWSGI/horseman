@@ -1,6 +1,6 @@
 from io import BytesIO
+from multidict import MultiDict
 from multifruits import Parser, extract_filename, parse_content_disposition
-from horseman.http import Form, Files
 
 
 class Multipart:
@@ -17,8 +17,8 @@ class Multipart:
 
     def __init__(self, content_type: str):
         self._parser = Parser(self, content_type.encode())
-        self.form = Form()
-        self.files = Files()
+        self.form = MultiDict()
+        self.files = MultiDict()
 
     def feed_data(self, data: bytes):
         self._parser.feed_data(data)
@@ -33,7 +33,8 @@ class Multipart:
         disposition_type, params = parse_content_disposition(
             self._current_headers.get(b'Content-Disposition'))
         if not disposition_type:
-            return
+            raise ValueError('Content-Disposition is missing.')
+
         self._current_params = params
         if b'Content-Type' in self._current_headers:
             self._current = BytesIO()

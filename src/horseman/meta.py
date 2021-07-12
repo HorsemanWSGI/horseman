@@ -1,9 +1,13 @@
 import sys
 from abc import ABC, abstractmethod
+from typing import TypeVar
 from horseman.response import Response
 from horseman.http import HTTPError
 from horseman.types import (
     WSGICallable, Environ, StartResponse, ExceptionInfo)
+
+
+Data = TypeVar('Data')
 
 
 class Overhead(ABC):
@@ -11,16 +15,12 @@ class Overhead(ABC):
     This object contains everything needed to handle a request.
     It can carry DB connectors, parsed data and other utils.
     """
+    data: Data
     environ: Environ
 
     @abstractmethod
-    def set_data(self, data):
-        """Set the data coming from the processing of the action.
-        """
-
-    @abstractmethod
-    def get_data(self):
-        """Get the processed data.
+    def extract(self) -> Data:
+        """Extracts the data from the incoming HTTP request.
         """
 
 
@@ -36,7 +36,7 @@ class APIView:
             return worker(overhead)
 
         # Method not allowed
-        return Response.create(405)
+        return Response(405)
 
 
 class Node(WSGICallable):
@@ -57,11 +57,11 @@ class Node(WSGICallable):
         try:
             response = self.resolve(path_info, environ)
             if response is None:
-                response = Response.create(404)
+                response = Response(404)
 
         except HTTPError as error:
             # FIXME: Log.
-            response = Response.create(error.status, error.body)
+            response = Response(error.status, error.body)
         return response(environ, start_response)
 
 
