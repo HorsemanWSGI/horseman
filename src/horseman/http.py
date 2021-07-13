@@ -3,7 +3,7 @@ from http import HTTPStatus
 from typing import NamedTuple, Dict, AnyStr
 from urllib.parse import parse_qsl
 from biscuits import Cookie, parse
-from multidict import MultiDict
+from horseman.datastructures import TypeCastingDict
 from horseman.types import HTTPCode, MIMEType
 
 
@@ -37,29 +37,15 @@ class ContentType(NamedTuple):
         return cls(*cgi.parse_header(header))
 
 
-class TypeCastingDict(MultiDict):
-    TRUE_STRINGS = {'t', 'true', 'yes', '1', 'on'}
-    FALSE_STRINGS = {'f', 'false', 'no', '0', 'off'}
-    NONE_STRINGS = {'n', 'none', 'null'}
+class Cookies(Dict[str, Cookie]):
+    """A Cookies management class, built on top of biscuits."""
 
-    def bool(self, key: str, default=...):
-        value = self.get(key, default)
-        if value in (True, False, None):
-            return value
-        value = value.lower()
-        if value in self.TRUE_STRINGS:
-            return True
-        elif value in self.FALSE_STRINGS:
-            return False
-        elif value in self.NONE_STRINGS:
-            return None
-        raise ValueError(f"Can't cast {value!r} to boolean.")
+    def set(self, name, *args, **kwargs):
+        self[name] = Cookie(name, *args, **kwargs)
 
-    def int(self, key: str, default=...):
-        return int(self.get(key, default))
-
-    def float(self, key: str, default=...):
-        return float(self.get(key, default))
+    @staticmethod
+    def from_environ(environ: dict):
+        return parse(environ.get('HTTP_COOKIE', ''))
 
 
 class Query(TypeCastingDict):
@@ -75,14 +61,3 @@ class Query(TypeCastingDict):
         if qs:
             return cls.from_value(qs)
         return cls()
-
-
-class Cookies(Dict[str, Cookie]):
-    """A Cookies management class, built on top of biscuits."""
-
-    def set(self, name, *args, **kwargs):
-        self[name] = Cookie(name, *args, **kwargs)
-
-    @staticmethod
-    def from_environ(environ: dict):
-        return parse(environ.get('HTTP_COOKIE', ''))

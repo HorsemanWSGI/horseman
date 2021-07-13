@@ -1,10 +1,10 @@
 from io import BytesIO
-from multidict import MultiDict
 from multifruits import Parser, extract_filename, parse_content_disposition
+from horseman.datastructures import FormData
 
 
 class Multipart:
-    """Responsible of the parsing of multipart encoded `request.body`.
+    """Responsible of the parsing of multipart encoded body.
     """
 
     __slots__ = (
@@ -17,8 +17,8 @@ class Multipart:
 
     def __init__(self, content_type: str):
         self._parser = Parser(self, content_type.encode())
-        self.form = MultiDict()
-        self.files = MultiDict()
+        self.form = FormData()
+        self.files = FormData()
 
     def feed_data(self, data: bytes):
         self._parser.feed_data(data)

@@ -4,20 +4,16 @@ from horseman.parsers import parser
 from horseman.http import HTTPError
 
 
-BAD_MULTIPART = b"""
---foo
-Content->Disposition: form-data; name="text1"
+BAD_MULTIPART = (
+    b"""--foo\r\nContent->Disposition: form-data; """
+    b"""name="text1"\r\n\r\n'abc\r\n--foo--\r\n"""
+)
 
-'abc\r\n--foo--
-"""
-
-BAD_MULTIPART_NO_CONTENT_DISPOSITION = b"""
-------------a_BoUnDaRy7283067873172754$
-Content-Disposition: ; name="test"
-
-some value
-------------a_BoUnDaRy7283067873172754$--
-"""
+BAD_MULTIPART_NO_CONTENT_DISPOSITION = (
+    b"""------------a_BoUnDaRy7283067873172754$\r\n"""
+    b"""Content-Disposition: ; name="test"\r\n\r\nsome value\r\n"""
+    b"""------------a_BoUnDaRy7283067873172754$--\r\n"""
+)
 
 
 def test_multipart():
@@ -31,14 +27,13 @@ def test_multipart():
     ], [])
 
     data = parser(BytesIO(body), content_type)
-    assert len(data.form) == 3
+    assert len(data.form) == 2
     assert list(data.form.items()) == [
-        ('test', 'some value'),
-        ('test', 'some other value'),
-        ('foo', 'bar')
+        ('test', ['some value', 'some other value']),
+        ('foo', ['bar'])
     ]
-    assert data.form.getone('foo') == 'bar'
-    assert data.form.getall('test') == ['some value', 'some other value']
+    assert data.form.get('foo') == 'bar'
+    assert data.form.getlist('test') == ['some value', 'some other value']
 
 
 def test_multipart_files():
@@ -52,7 +47,7 @@ def test_multipart_files():
     )
 
     data = parser(BytesIO(body), content_type)
-    uploaded = data.files.getall('files')
+    uploaded = data.files.getlist('files')
     assert len(uploaded) == 2
     assert uploaded[0].filename == 'baz-é.png'
     assert uploaded[0].content_type == b'image/png'

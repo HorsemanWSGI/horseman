@@ -18,7 +18,7 @@ def test_urlencoded():
     assert data.files is None
     assert data.json is None
     assert isinstance(data.form, Query)
-    assert tuple(data.form.items()) == (
+    assert tuple(data.form.pairs()) == (
         ('name', 'MacBeth'),
         ('thane', 'Cawdor'),
         ('thane', 'Glamis')
@@ -32,7 +32,7 @@ def test_urlencoded_charset():
     assert data.files is None
     assert data.json is None
     assert isinstance(data.form, Query)
-    assert tuple(data.form.items()) == (
+    assert tuple(data.form.pairs()) == (
         ('name', 'Älfùr'),
     )
 
@@ -48,7 +48,7 @@ def test_urlencoded_charset():
     assert data.files is None
     assert data.json is None
     assert isinstance(data.form, Query)
-    assert tuple(data.form.items()) == (
+    assert tuple(data.form.pairs()) == (
         ('name', 'Älfùr'),
     )
 
