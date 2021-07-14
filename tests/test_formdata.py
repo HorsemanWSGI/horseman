@@ -36,7 +36,6 @@ def test_data_init():
         'b': [7]
     }))
 
-
     # dict
     fd = FormData({'a': 1, 'b': 7})
     assert fd == {'a': [1], 'b': [7]}

@@ -47,7 +47,7 @@ def test_mapping_instanciation():
 
 def test_mapping_update():
     node = Mapping({"/test": basic_app})
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError):
         node.update({1: basic_app})
 
     node.update({'/test': other_app})

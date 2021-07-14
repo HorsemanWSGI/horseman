@@ -1,5 +1,6 @@
 from frozendict import frozendict
-from typing import cast, Optional, Union, Any, Mapping, List, NoReturn, Iterable, Tuple, Dict
+from typing import (
+    cast, Optional, Union, Any, Mapping, List, Iterable, Tuple, Dict)
 
 
 Pairs = Iterable[Tuple[str, Any]]
@@ -34,7 +35,7 @@ class FormData(Dict[str, List[Any]]):
             for value in values:
                 yield key, value
 
-    def add(self, name: str, value: Any) -> NoReturn:
+    def add(self, name: str, value: Any) -> None:
         if name in self:
             self[name].append(value)
         else:
