@@ -176,3 +176,12 @@ class Response(WSGICallable):
         else:
             headers['Content-Type'] = 'application/json'
         return cls(code, body, headers)
+
+    @classmethod
+    def html(cls, code: HTTPCode = 200, body: str = '',
+                  headers: Optional[Headers] = None):
+        if headers is None:
+            headers = {'Content-Type': 'text/html; charset=utf-8'}
+        else:
+            headers['Content-Type'] = 'text/html; charset=utf-8'
+        return cls(code, body, headers)
