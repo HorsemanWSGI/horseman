@@ -133,6 +133,20 @@ def test_json_response_headers():
     ]
 
 
+def test_html_response():
+
+    response = Response.html(body="<html></html>")
+    assert list(response.headers.items()) == [
+        ('Content-Type', 'text/html; charset=utf-8')
+    ]
+
+    response = Response.html(
+        body="{}", headers={"Content-Type": "text/plain"})
+    assert list(response.headers.items()) == [
+        ('Content-Type', 'text/html; charset=utf-8')
+    ]
+
+
 def test_json_response():
     structure = {
         'Horseman': 'headless',
