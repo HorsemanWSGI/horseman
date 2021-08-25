@@ -1,5 +1,6 @@
 import pytest
 from io import BytesIO
+from webtest.app import TestApp as App
 from horseman.parsers import parser
 from horseman.http import HTTPError
 
@@ -17,9 +18,8 @@ BAD_MULTIPART_NO_CONTENT_DISPOSITION = (
 
 
 def test_multipart():
-    from webtest.app import TestApp
 
-    app = TestApp(None)
+    app = App(None)
     content_type, body = app.encode_multipart([
         ('test', 'some value'),
         ('test', 'some other value'),
@@ -36,10 +36,54 @@ def test_multipart():
     assert data.form.getlist('test') == ['some value', 'some other value']
 
 
-def test_multipart_files():
-    from webtest.app import TestApp
+def test_multipart_empty_files_empty_name():
+    app = App(None)
+    content_type, body = app.encode_multipart(
+        [],
+        [('test', "", b'', "application/octet")],
+    )
+    data = parser(BytesIO(body), content_type)
+    assert not data.files
 
-    app = TestApp(None)
+    content_type, body = app.encode_multipart(
+        [],
+        [('test', "", b'', "application/octet"),
+         ('test2', "", b'', "application/octet")],
+    )
+    data = parser(BytesIO(body), content_type)
+    assert not data.files
+
+
+def test_multipart_empty_files_mixed():
+    app = App(None)
+    content_type, body = app.encode_multipart(
+        [],
+        [('test', "name", b'', "application/octet"),
+         ('test2', "", b'content', "application/octet"),
+         ('test3', "", b'', "application/octet")],
+    )
+    data = parser(BytesIO(body), content_type)
+    assert not 'test3' in data.files
+    assert data.files['test'][0].filename == "name"
+    assert data.files['test2'][0].read() == b'content'
+    assert data.files['test2'][0].filename != ''
+
+
+def test_multipart_empty_filename_generation():
+    app = App(None)
+    content_type, body = app.encode_multipart(
+        [],
+        [('test', "", b'content', "application/octet"),
+         ('test', "", b'content', "application/octet")]
+    )
+    data = parser(BytesIO(body), content_type)
+    assert data.files['test'][0].filename != data.files['test'][1].filename
+    assert data.files['test'][0] != ''
+
+
+def test_multipart_files():
+
+    app = App(None)
     content_type, body = app.encode_multipart(
         [('test', b'some value')],
         [('files', "baz-\xe9.png", b'abcdef', 'image/png'),

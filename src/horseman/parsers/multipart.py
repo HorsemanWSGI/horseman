@@ -13,7 +13,8 @@ class Multipart:
         '_parser',
         '_current',
         '_current_headers',
-        '_current_params')
+        '_current_params'
+    )
 
     def __init__(self, content_type: str):
         self._parser = Parser(self, content_type.encode())
@@ -39,6 +40,7 @@ class Multipart:
         if b'Content-Type' in self._current_headers:
             self._current = BytesIO()
             self._current.filename = extract_filename(params)
+            self._current.size = 0
             self._current.content_type = self._current_headers[b'Content-Type']
             self._current.params = params
         else:
@@ -47,6 +49,7 @@ class Multipart:
     def on_data(self, data: bytes):
         if b'Content-Type' in self._current_headers:
             self._current.write(data)
+            self._current.size += len(data)
         else:
             self._current += data.decode()
 
@@ -54,6 +57,15 @@ class Multipart:
         name = self._current_params.get(b'name', b'').decode()
         if b'Content-Type' in self._current_headers:
             self._current.seek(0)
+            if not self._current.filename:
+                if not self._current.getbuffer().nbytes:
+                    # This is an empty file with no name
+                    # We do *not* save it.
+                    self._current = None
+                    return
+                # at this point, we've got content but no name.
+                # generate one.
+                self._current.filename = str(id(self._current))
             self.files.add(name, self._current)
         else:
             self.form.add(name, self._current)
