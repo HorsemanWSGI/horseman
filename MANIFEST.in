@@ -1,4 +1,4 @@
 recursive-include src *.py *.txt
-recursive-include docs *.txt
+recursive-include docs *.txt *.rst
 recursive-include tests *.py
-include *.ini *.cfg *.py
+include *.ini *.cfg *.py *.rst
