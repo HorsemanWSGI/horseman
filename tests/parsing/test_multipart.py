@@ -63,7 +63,7 @@ def test_multipart_empty_files_mixed():
          ('test3', "", b'', "application/octet")],
     )
     data = parser(BytesIO(body), content_type)
-    assert not 'test3' in data.files
+    assert 'test3' not in data.files
     assert data.files['test'][0].filename == "name"
     assert data.files['test2'][0].read() == b'content'
     assert data.files['test2'][0].filename != ''

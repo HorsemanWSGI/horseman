@@ -179,7 +179,7 @@ class Response(WSGICallable):
 
     @classmethod
     def html(cls, code: HTTPCode = 200, body: str = '',
-                  headers: Optional[Headers] = None):
+             headers: Optional[Headers] = None):
         if headers is None:
             headers = {'Content-Type': 'text/html; charset=utf-8'}
         else:

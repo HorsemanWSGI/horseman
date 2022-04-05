@@ -1,4 +1,5 @@
 import sys
+import re
 from abc import ABC, abstractmethod
 from typing import TypeVar
 from horseman.response import Response
@@ -8,6 +9,7 @@ from horseman.types import (
 
 
 Data = TypeVar('Data')
+slashes_normalization = re.compile(r"/+")
 
 
 class Overhead(ABC):
@@ -53,7 +55,13 @@ class Node(WSGICallable):
         # (and others) can only contain unicode codepoints from 0 to 255,
         # which is why we need to decode to latin-1 instead of utf-8 here.
         # We transform it back to UTF-8
-        path_info = environ['PATH_INFO'].encode('latin-1').decode('utf-8')
+        # Note that it's valid for WSGI server to omit the value if it's
+        # empty.
+        path_info = environ.get(
+            'PATH_INFO', '').encode('latin-1').decode('utf-8')
+        if path_info:
+            # Normalize the slashes to avoid things like '//test'
+            path_info = slashes_normalization.sub("/", path_info)
         try:
             response = self.resolve(path_info, environ)
             if response is None:

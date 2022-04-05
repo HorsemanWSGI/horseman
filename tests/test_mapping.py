@@ -113,6 +113,13 @@ def test_mapping_resolve():
     assert environ == {'PATH_INFO': '/', 'SCRIPT_NAME': ''}
 
 
+def test_mapping_competing_apps():
+    environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/backend'}
+    node = Mapping({"/": basic_app, "/backend": other_app})
+    assert node.resolve('/backend', environ) is other_app
+    assert environ == {'PATH_INFO': '', 'SCRIPT_NAME': '/backend'}
+
+
 def test_nested_mapping():
     from unittest.mock import Mock
 

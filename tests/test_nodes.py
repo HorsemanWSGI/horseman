@@ -42,6 +42,19 @@ class TestNode:
         assert response.status == "400 Bad Request"
         assert response.body == b'This is a dead end'
 
+    def test_path_normalization(self):
+
+        class MyNode(Node):
+
+            def resolve(self, path_info, environ):
+                return Response(body=path_info)
+
+        node = WSGIApp(MyNode())
+        assert node.get("/test").body == b'/test'
+        assert node.get("///test//").body == b'/test/'
+        assert node.get("///foo//bar////").body == b'/foo/bar/'
+        assert node.get("").body == b''
+
 
 class TestSentryNode:
 
