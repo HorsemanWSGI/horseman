@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+0.4 (2022-04-06)
+----------------
+
+  * Fixed `FormData.to_dict` to handle empty or false values.
+
 0.3 (2022-04-05)
 ----------------
 

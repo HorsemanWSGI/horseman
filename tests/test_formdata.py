@@ -79,10 +79,10 @@ def test_casting():
 
 
 def test_empty_value():
-     fd = FormData([
-         ('email', 'ck@novareto.de'), ('contact', '')])
-     assert fd == {'contact': [''], 'email': ['ck@novareto.de']}
-     assert fd.to_dict() == {
-         'contact': '',
-         'email': 'ck@novareto.de'
-     }
+    fd = FormData([
+        ('email', 'ck@novareto.de'), ('contact', '')])
+    assert fd == {'contact': [''], 'email': ['ck@novareto.de']}
+    assert fd.to_dict() == {
+        'contact': '',
+        'email': 'ck@novareto.de'
+    }
