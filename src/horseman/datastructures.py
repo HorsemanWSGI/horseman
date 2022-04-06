@@ -44,7 +44,7 @@ class FormData(Dict[str, List[Any]]):
     def to_dict(self, frozen=True):
         impl = frozendict if frozen else dict
         return impl(
-            {k: (len(v) == 1 and v[0] or v) for k, v in self.items()}
+            {k: (v[0] if len(v) == 1 else v) for k, v in self.items()}
         )
 
 

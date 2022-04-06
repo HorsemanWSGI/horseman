@@ -76,3 +76,13 @@ def test_casting():
         'b': 7
     }))
     assert isinstance(dictified, dict)
+
+
+def test_empty_value():
+     fd = FormData([
+         ('email', 'ck@novareto.de'), ('contact', '')])
+     assert fd == {'contact': [''], 'email': ['ck@novareto.de']}
+     assert fd.to_dict() == {
+         'contact': '',
+         'email': 'ck@novareto.de'
+     }
