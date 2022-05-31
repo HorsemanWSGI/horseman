@@ -36,6 +36,23 @@ def test_multipart():
     assert data.form.getlist('test') == ['some value', 'some other value']
 
 
+def test_empty_multipart():
+
+    app = App(None)
+    content_type, body = app.encode_multipart([
+        ('test', ''),
+        ('test', ''),
+        ('foo', 'bar')
+    ], [])
+    data = parser(BytesIO(body), content_type)
+    assert len(data.form) == 1
+    assert list(data.form.items()) == [
+        ('foo', ['bar'])
+    ]
+    assert data.form.get('foo') == 'bar'
+    assert data.form.getlist('test') == []
+
+
 def test_multipart_empty_files_empty_name():
     app = App(None)
     content_type, body = app.encode_multipart(

@@ -68,5 +68,6 @@ class Multipart:
                 self._current.filename = str(id(self._current))
             self.files.add(name, self._current)
         else:
-            self.form.add(name, self._current)
+            if self._current:
+                self.form.add(name, self._current)
         self._current = None

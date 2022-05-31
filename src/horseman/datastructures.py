@@ -25,9 +25,11 @@ class FormData(Dict[str, List[Any]]):
         """
         return super().get(name, [default])[0]
 
-    def getlist(self, name: str, default: Optional[Any] = None) -> List[Any]:
+    def getlist(self, name: str, default: Optional[Any] = ...) -> List[Any]:
         """Return the value list
         """
+        if default is ...:
+            default = []
         return super().get(name, default)
 
     def pairs(self) -> Pairs:
@@ -53,7 +55,7 @@ class TypeCastingDict(FormData):
     FALSE_STRINGS = {'f', 'false', 'no', '0', 'off'}
     NONE_STRINGS = {'n', 'none', 'null'}
 
-    def bool(self, key: str, default=...):
+    def bool(self, key: str, default=None):
         value = self.get(key, default)
         if value in (True, False, None):
             return value

@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+0.5 (2022-05-31)
+----------------
+
+  * Multipart parser no longer adds empty values to the form multidict.
+
 0.4 (2022-04-06)
 ----------------
 
