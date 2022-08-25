@@ -1,6 +1,5 @@
 from io import BytesIO
 from multifruits import Parser, extract_filename, parse_content_disposition
-from horseman.datastructures import FormData
 
 
 class Multipart:
@@ -18,8 +17,7 @@ class Multipart:
 
     def __init__(self, content_type: str):
         self._parser = Parser(self, content_type.encode())
-        self.form = FormData()
-        self.files = FormData()
+        self.form = []
 
     def feed_data(self, data: bytes):
         self._parser.feed_data(data)
@@ -41,7 +39,9 @@ class Multipart:
             self._current = BytesIO()
             self._current.filename = extract_filename(params)
             self._current.size = 0
-            self._current.content_type = self._current_headers[b'Content-Type']
+            self._current.content_type = self._current_headers[
+                b'Content-Type'
+            ]
             self._current.params = params
         else:
             self._current = ''
@@ -66,8 +66,8 @@ class Multipart:
                 # at this point, we've got content but no name.
                 # generate one.
                 self._current.filename = str(id(self._current))
-            self.files.add(name, self._current)
+            self.form.append((name, self._current))
         else:
             if self._current:
-                self.form.add(name, self._current)
+                self.form.append((name, self._current))
         self._current = None

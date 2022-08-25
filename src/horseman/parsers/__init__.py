@@ -1,25 +1,24 @@
 import re
 import orjson
+import typing as t
 from http import HTTPStatus
-from typing import Optional, Union, Dict, List, NamedTuple, IO, Callable
-from horseman.datastructures import FormData
+from urllib.parse import parse_qsl
 from horseman.parsers.multipart import Multipart
-from horseman.http import HTTPError, ContentType, Query
+from horseman.http import HTTPError, ContentType
 from horseman.types import Charset, MIMEType
 
 
 MIME_TYPE_REGEX = re.compile(r"^multipart|[-\w.]+/[-\w.\+]+$")
 
 
-class Data(NamedTuple):
-    form: Optional[FormData] = None
-    files: Optional[FormData] = None
-    json: Optional[Union[Dict, List]] = None  # not too specific
+class Data(t.NamedTuple):
+    form: t.Optional[t.Iterable[t.Tuple[str, t.Any]]] = None
+    json: t.Optional[t.Union[t.Dict, t.List]] = None  # not too specific
 
 
 Boundary = str
-Parser = Callable[[
-    IO, MIMEType, Optional[Union[Charset, Boundary]]
+Parser = t.Callable[[
+    t.IO, MIMEType, t.Optional[t.Union[Charset, Boundary]]
 ], Data]
 
 
@@ -39,10 +38,10 @@ class BodyParser:
             return parser
         return registration
 
-    def get(self, mimetype: MIMEType) -> Optional[Parser]:
+    def get(self, mimetype: MIMEType) -> t.Optional[Parser]:
         return self.parsers.get(mimetype)
 
-    def __call__(self, body: IO, header: Union[str, ContentType]) -> Data:
+    def __call__(self, body: t.IO, header: t.Union[str, ContentType]) -> Data:
         if not isinstance(header, ContentType):
             content_type = ContentType.from_http_header(header)
         else:
@@ -64,7 +63,7 @@ parser = BodyParser()
 
 
 @parser.register('application/json')
-def json_parser(body: IO, mimetype: MIMEType,
+def json_parser(body: t.IO, mimetype: MIMEType,
                 charset: Charset = 'utf-8') -> Data:
     data = body.read()
     if not data:
@@ -77,8 +76,8 @@ def json_parser(body: IO, mimetype: MIMEType,
 
 
 @parser.register('multipart/form-data')
-def multipart_parser(body: IO, mimetype: MIMEType,
-                     boundary: Optional[str] = None) -> Data:
+def multipart_parser(body: t.IO, mimetype: MIMEType,
+                     boundary: t.Optional[str] = None) -> Data:
     if boundary is None:
         raise ValueError('Missing boundary in Content-Type.')
     content_parser = Multipart(f";boundary={boundary}")
@@ -87,17 +86,21 @@ def multipart_parser(body: IO, mimetype: MIMEType,
             content_parser.feed_data(chunk)
         except ValueError:
             raise ValueError('Unparsable multipart body.')
-    return Data(form=content_parser.form, files=content_parser.files)
+    return Data(form=content_parser.form)
 
 
 @parser.register('application/x-www-form-urlencoded')
-def urlencoded_parser(body: IO, mimetype: MIMEType,
+def urlencoded_parser(body: t.IO, mimetype: MIMEType,
                       charset: Charset = 'utf-8') -> Data:
     data = body.read()
     if not data:
         raise ValueError('The body of the request is empty.')
     try:
-        form = Query.from_value(data.decode(charset))
+        form = parse_qsl(
+            data.decode(charset),
+            keep_blank_values=True,
+            strict_parsing=True
+        )
     except UnicodeDecodeError:
         raise ValueError(f'Failed to decode using charset {charset!r}.')
     return Data(form=form)

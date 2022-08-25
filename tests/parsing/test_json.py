@@ -15,7 +15,6 @@ def test_json():
     data = json_parser(body, 'application/json')
     assert data == Data(
         form=None,
-        files=None,
         json={'foo': 'bar'}
     )
 
@@ -25,7 +24,6 @@ def test_json_charset():
     data = json_parser(body, 'application/json')
     assert data == Data(
         form=None,
-        files=None,
         json={'name': 'Älfùr'}
     )
 
@@ -40,7 +38,6 @@ def test_json_charset():
     data = json_parser(body, 'application/json', charset='latin-1')
     assert data == Data(
         form=None,
-        files=None,
         json={'name': 'Älfùr'}
     )
 

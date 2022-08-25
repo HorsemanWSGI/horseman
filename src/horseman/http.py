@@ -1,9 +1,7 @@
 import cgi
 from http import HTTPStatus
 from typing import NamedTuple, Dict, AnyStr
-from urllib.parse import parse_qsl
 from biscuits import Cookie, parse
-from horseman.datastructures import TypeCastingDict
 from horseman.types import HTTPCode, MIMEType
 
 
@@ -46,18 +44,3 @@ class Cookies(Dict[str, Cookie]):
     @staticmethod
     def from_environ(environ: dict):
         return parse(environ.get('HTTP_COOKIE', ''))
-
-
-class Query(TypeCastingDict):
-
-    @classmethod
-    def from_value(cls, value: str):
-        return cls(parse_qsl(
-            value, keep_blank_values=True, strict_parsing=True))
-
-    @classmethod
-    def from_environ(cls, environ: dict):
-        qs = environ.get('QUERY_STRING', '')
-        if qs:
-            return cls.from_value(qs)
-        return cls()

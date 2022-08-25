@@ -27,13 +27,12 @@ def test_multipart():
     ], [])
 
     data = parser(BytesIO(body), content_type)
-    assert len(data.form) == 2
-    assert list(data.form.items()) == [
-        ('test', ['some value', 'some other value']),
-        ('foo', ['bar'])
+    assert len(data.form) == 3
+    assert data.form == [
+        ('test', 'some value'),
+        ('test', 'some other value'),
+        ('foo', 'bar')
     ]
-    assert data.form.get('foo') == 'bar'
-    assert data.form.getlist('test') == ['some value', 'some other value']
 
 
 def test_empty_multipart():
@@ -46,11 +45,9 @@ def test_empty_multipart():
     ], [])
     data = parser(BytesIO(body), content_type)
     assert len(data.form) == 1
-    assert list(data.form.items()) == [
-        ('foo', ['bar'])
+    assert data.form == [
+        ('foo', 'bar')
     ]
-    assert data.form.get('foo') == 'bar'
-    assert data.form.getlist('test') == []
 
 
 def test_multipart_empty_files_empty_name():
@@ -60,7 +57,7 @@ def test_multipart_empty_files_empty_name():
         [('test', "", b'', "application/octet")],
     )
     data = parser(BytesIO(body), content_type)
-    assert not data.files
+    assert data.form == []
 
     content_type, body = app.encode_multipart(
         [],
@@ -68,7 +65,7 @@ def test_multipart_empty_files_empty_name():
          ('test2', "", b'', "application/octet")],
     )
     data = parser(BytesIO(body), content_type)
-    assert not data.files
+    assert data.form == []
 
 
 def test_multipart_empty_files_mixed():
@@ -80,10 +77,12 @@ def test_multipart_empty_files_mixed():
          ('test3', "", b'', "application/octet")],
     )
     data = parser(BytesIO(body), content_type)
-    assert 'test3' not in data.files
-    assert data.files['test'][0].filename == "name"
-    assert data.files['test2'][0].read() == b'content'
-    assert data.files['test2'][0].filename != ''
+    assert len(data.form) == 2
+    _, file1 = data.form[0]
+    _, file2 = data.form[1]
+    assert file1.filename == "name"
+    assert file2.read() == b'content'
+    assert file2.filename != ''
 
 
 def test_multipart_empty_filename_generation():
@@ -94,8 +93,10 @@ def test_multipart_empty_filename_generation():
          ('test', "", b'content', "application/octet")]
     )
     data = parser(BytesIO(body), content_type)
-    assert data.files['test'][0].filename != data.files['test'][1].filename
-    assert data.files['test'][0] != ''
+    _, file1 = data.form[0]
+    _, file2 = data.form[1]
+    assert file1.filename != file2.filename
+    assert file1.filename != ''
 
 
 def test_multipart_files():
@@ -108,14 +109,17 @@ def test_multipart_files():
     )
 
     data = parser(BytesIO(body), content_type)
-    uploaded = data.files.getlist('files')
+    uploaded = data.form[1:]
     assert len(uploaded) == 2
-    assert uploaded[0].filename == 'baz-é.png'
-    assert uploaded[0].content_type == b'image/png'
-    assert uploaded[0].read() == b'abcdef'
-    assert uploaded[1].filename == 'MyText.txt'
-    assert uploaded[1].content_type == b'text/plain'
-    assert uploaded[1].read() == b'ghi'
+    name, obj = uploaded[0]
+    assert obj.filename == 'baz-é.png'
+    assert obj.content_type == b'image/png'
+    assert obj.read() == b'abcdef'
+
+    name, obj = uploaded[1]
+    assert obj.filename == 'MyText.txt'
+    assert obj.content_type == b'text/plain'
+    assert obj.read() == b'ghi'
 
 
 def test_wrong_multipart():

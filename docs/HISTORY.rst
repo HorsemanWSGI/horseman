@@ -1,6 +1,18 @@
 CHANGES
 =======
 
+0.6 (2022-08-25)
+----------------
+
+Major update.
+
+  * Simplified the parsing `Data` class by dropping the attempts at
+    mimicking `MultiDict`. Parsing no longer separate files from form
+    data and values are stored as a list of tuples containing (name, value).
+
+  * `FormData`, `TypeCastingDict` and `Query` classes were removed.
+
+
 0.5 (2022-05-31)
 ----------------
 
