@@ -17,6 +17,7 @@ HTTPMethod = Literal[
     "GET", "HEAD", "PUT", "DELETE", "PATCH", "POST", "OPTIONS"
 ]
 
+Boundary = TypeVar('Boundary', str, bytes)
 Charset = TypeVar('Charset', str, bytes)
 MIMEType = TypeVar('MIMEType', str, bytes)
 HTTPCode = TypeVar('HTTPCode', HTTPStatus, int)

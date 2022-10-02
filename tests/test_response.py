@@ -2,7 +2,8 @@ import pytest
 import webtest
 from unittest.mock import Mock
 from http import HTTPStatus
-from horseman.response import Response, file_iterator
+from horseman.utils import file_iterator
+from horseman.response import Response
 
 
 def test_file_iterator(tmpdir):
@@ -282,14 +283,14 @@ def test_finishers():
 
     response.close()
     assert task.called is True
-    assert task.assert_called_with() is None
+    assert task.assert_called_with(response) is None
 
 
 def test_finishers_order():
     calls = []
 
     def tasker(num):
-        def task():
+        def task(response):
             calls.append(num)
         return task
 
@@ -313,7 +314,7 @@ def test_exception_finisher():
     calls = []
 
     def tasker(num):
-        def task():
+        def task(response):
             if num == 2:
                 raise RuntimeError('I do not want a 2')
             calls.append(num)

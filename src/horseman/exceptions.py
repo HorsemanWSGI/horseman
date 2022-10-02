@@ -1,8 +1,10 @@
-import cgi
 from http import HTTPStatus
-from typing import NamedTuple, Dict, AnyStr
-from biscuits import Cookie, parse
-from horseman.types import HTTPCode, MIMEType
+from typing import AnyStr
+from horseman.types import HTTPCode
+
+
+class ParsingException(ValueError):
+    pass
 
 
 class HTTPError(Exception):
@@ -24,23 +26,3 @@ class HTTPError(Exception):
                     length=len(self.body),
                     body=self.body
                 ).encode()
-
-
-class ContentType(NamedTuple):
-    mimetype: MIMEType
-    options: dict
-
-    @classmethod
-    def from_http_header(cls, header: str):
-        return cls(*cgi.parse_header(header))
-
-
-class Cookies(Dict[str, Cookie]):
-    """A Cookies management class, built on top of biscuits."""
-
-    def set(self, name, *args, **kwargs):
-        self[name] = Cookie(name, *args, **kwargs)
-
-    @staticmethod
-    def from_environ(environ: dict):
-        return parse(environ.get('HTTP_COOKIE', ''))

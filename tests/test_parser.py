@@ -1,7 +1,8 @@
 import pytest
 from io import BytesIO
-from horseman.parsers import BodyParser, Data
-from horseman.http import HTTPError, ContentType
+from horseman.exceptions import HTTPError
+from horseman.datastructures import Data, ContentType
+from horseman.parsers.parser import BodyParser
 
 
 def test_parser_invalid_registration():
@@ -46,7 +47,7 @@ def test_unknown_parser():
     parser = BodyParser()
 
     with pytest.raises(HTTPError) as exc:
-        parser(BytesIO(b'body'), 'foo/bar')
+        parser.parse(BytesIO(b'body'), 'foo/bar')
 
     assert exc.value.status == 400
     assert exc.value.body == "Unknown content type: 'foo/bar'."
@@ -55,20 +56,20 @@ def test_unknown_parser():
     def test(body, mimetype, **options):
         return Data()
 
-    data = parser(BytesIO(b'body'), 'foo/bar')
+    data = parser.parse(BytesIO(b'body'), 'foo/bar')
     assert isinstance(data, Data)
 
-    data = parser(BytesIO(b'body'), 'foo/bar; charset=UTF-8')
+    data = parser.parse(BytesIO(b'body'), 'foo/bar; charset=UTF-8')
     assert isinstance(data, Data)
 
 
 def test_parser_with_mimetype():
     parser = BodyParser()
-    contenttype = ContentType('foo/bar', {})
+    contenttype = ContentType('foo/bar')
 
     @parser.register('foo/bar')
     def test(body, mimetype, **options):
         return Data()
 
-    data = parser(BytesIO(b'body'), contenttype)
+    data = parser.parse(BytesIO(b'body'), contenttype)
     assert isinstance(data, Data)

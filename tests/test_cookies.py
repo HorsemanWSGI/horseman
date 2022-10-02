@@ -1,15 +1,15 @@
-from horseman.http import Cookies
+from biscuits import Cookie
+from horseman.datastructures import Cookies
 
 
 def test_request_parse_cookies():
     from webtest.app import TestRequest as Request
 
     # A simple cookie
-    request = Request(environ={}, cookies={'key': 'value'})
-    cookies = Cookies.from_environ(request.environ)
+    cookie = Cookie(name='key', value='value')
+    cookies = Cookies.from_string(str(cookie))
     assert cookies['key'] == 'value'
 
     # No cookie
-    request = Request(environ={})
-    cookies = Cookies.from_environ(request.environ)
+    cookies = Cookies.from_string("")
     assert not cookies

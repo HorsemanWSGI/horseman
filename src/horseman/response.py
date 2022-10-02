@@ -1,10 +1,9 @@
 import orjson
+import typing as t
 from http import HTTPStatus
-from pathlib import Path
 from multidict import CIMultiDict
-from horseman.http import Cookies
+from horseman.datastructures import Cookies
 from horseman.types import Environ, HTTPCode, StartResponse, WSGICallable
-from typing import Deque, Callable, Any, Generator, Iterable, Optional, Tuple
 
 
 BODYLESS = frozenset((
@@ -27,16 +26,9 @@ REDIRECT = frozenset((
 ))
 
 
-def file_iterator(path: Path, chunk: int = 4096):
-    with path.open('rb') as reader:
-        while True:
-            data = reader.read(chunk)
-            if not data:
-                break
-            yield data
-
-
 class Headers(CIMultiDict):
+
+    __slots__ = ('_cookies',)
 
     cookies: Cookies
 
@@ -50,13 +42,13 @@ class Headers(CIMultiDict):
             self._cookies = Cookies()
         return self._cookies
 
-    def items(self) -> Generator[Tuple[str, str], None, None]:
+    def items(self) -> t.Iterable[t.Tuple[str, str]]:
         yield from super().items()
         if self._cookies:
             for cookie in self._cookies.values():
                 yield 'Set-Cookie', str(cookie)
 
-    def coalesced_items(self) -> Generator[Tuple[str, str], None, None]:
+    def coalesced_items(self) -> t.Iterable[t.Tuple[str, str]]:
         """Coalescence of headers does NOT garanty order of headers.
         It garanties the order of the header values, though.
         """
@@ -75,7 +67,7 @@ class Headers(CIMultiDict):
             yield 'Set-Cookie', ', '.join(cookies)
 
 
-Finisher = Callable[[], None]
+Finisher = t.Callable[['Response'], None]
 
 
 class Response(WSGICallable):
@@ -83,13 +75,13 @@ class Response(WSGICallable):
     __slots__ = ('status', 'body', 'headers', '_finishers')
 
     status: HTTPStatus
-    body: Iterable
+    body: t.Optional[t.Union[t.AnyStr, t.Iterator[bytes]]]
     headers: Headers
-    _finishers: Optional[Deque[Finisher]]
+    _finishers: t.Optional[t.Deque[Finisher]]
 
     def __init__(self, status: HTTPCode = 200,
-                 body: Optional[Iterable] = None,
-                 headers: Optional[Headers] = None):
+                 body: t.Optional[t.Iterable] = None,
+                 headers: t.Optional[Headers] = None):
         self.status = HTTPStatus(status)
         self.body = body
         self.headers = Headers(headers or [])
@@ -107,14 +99,14 @@ class Response(WSGICallable):
         if self._finishers:
             while self._finishers:
                 finisher = self._finishers.popleft()
-                finisher()
+                finisher(self)
 
     def add_finisher(self, task: Finisher):
         if self._finishers is None:
-            self._finishers = Deque()
+            self._finishers = t.Deque()
         self._finishers.append(task)
 
-    def __iter__(self) -> Generator[bytes, None, None]:
+    def __iter__(self) -> t.Iterator[bytes]:
         if self.status not in BODYLESS:
             if self.body is None:
                 yield self.status.description.encode()
@@ -122,7 +114,7 @@ class Response(WSGICallable):
                 yield self.body
             elif isinstance(self.body, str):
                 yield self.body.encode()
-            elif isinstance(self.body, (Generator, Iterable)):
+            elif isinstance(self.body, t.Iterable):
                 yield from self.body
             else:
                 raise TypeError(
@@ -130,15 +122,15 @@ class Response(WSGICallable):
                 )
 
     def __call__(self, environ: Environ,
-                 start_response: StartResponse) -> Iterable:
+                 start_response: StartResponse) -> t.Iterable[bytes]:
         status = f'{self.status.value} {self.status.phrase}'
         start_response(status, list(self.headers.items()))
         return self
 
     @classmethod
     def redirect(cls, location, code: HTTPCode = 303,
-                 body: Optional[Iterable] = None,
-                 headers: Optional[Headers] = None):
+                 body: t.Optional[t.Iterable] = None,
+                 headers: t.Optional[Headers] = None) -> 'Response':
         if code not in REDIRECT:
             raise ValueError(f"{code}: unknown redirection code.")
         if not headers:
@@ -148,8 +140,8 @@ class Response(WSGICallable):
         return cls(code, body, headers)
 
     @classmethod
-    def from_file_iterator(cls, filename: str, body: Iterable[bytes],
-                           headers: Optional[Headers] = None):
+    def from_file_iterator(cls, filename: str, body: t.Iterable[bytes],
+                           headers: t.Optional[Headers] = None):
         if headers is None:
             headers = {
                 "Content-Disposition": f"attachment;filename={filename}"}
@@ -159,8 +151,8 @@ class Response(WSGICallable):
         return cls(200, body, headers)
 
     @classmethod
-    def to_json(cls, code: HTTPCode = 200, body: Optional[Any] = None,
-                headers: Optional[Headers] = None):
+    def to_json(cls, code: HTTPCode = 200, body: t.Optional[t.Any] = None,
+                headers: t.Optional[Headers] = None):
         data = orjson.dumps(body)
         if headers is None:
             headers = {'Content-Type': 'application/json'}
@@ -169,8 +161,8 @@ class Response(WSGICallable):
         return cls(code, data, headers)
 
     @classmethod
-    def from_json(cls, code: HTTPCode = 200, body: str = '',
-                  headers: Optional[Headers] = None):
+    def from_json(cls, code: HTTPCode = 200, body: t.AnyStr = '',
+                  headers: t.Optional[Headers] = None):
         if headers is None:
             headers = {'Content-Type': 'application/json'}
         else:
@@ -178,8 +170,8 @@ class Response(WSGICallable):
         return cls(code, body, headers)
 
     @classmethod
-    def html(cls, code: HTTPCode = 200, body: str = '',
-             headers: Optional[Headers] = None):
+    def html(cls, code: HTTPCode = 200, body: t.AnyStr = '',
+             headers: t.Optional[Headers] = None):
         if headers is None:
             headers = {'Content-Type': 'text/html; charset=utf-8'}
         else:
