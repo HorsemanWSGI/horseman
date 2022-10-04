@@ -15,8 +15,8 @@ HTTPCode = t.TypeVar('HTTPCode', HTTPStatus, int)
 StatusCode = t.TypeVar('StatusCode', str, bytes)
 URLParameter = t.TypeVar('URLParameter')
 
-Environ = t.Mapping[str, Any]
-ExceptionInfo = t.Tuple[Exception, t.Any, t.TracebackType]
+Environ = t.Mapping[str, t.Any]
+ExceptionInfo = t.Tuple[Exception, t.Any, TracebackType]
 ResponseHeaders = t.Iterable[t.Tuple[str, str]]
 StartResponse = t.Callable[
     [StatusCode, ResponseHeaders, t.Optional[ExceptionInfo]],
