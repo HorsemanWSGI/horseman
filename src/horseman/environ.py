@@ -8,7 +8,7 @@ from horseman.datastructures import Cookies, ContentType, Query
 
 class WSGIEnvironWrapper(Environ):
 
-    __slots__ = ('_environ')
+    _environ: Environ
 
     def __new__(cls, environ):
         if isinstance(environ, cls):

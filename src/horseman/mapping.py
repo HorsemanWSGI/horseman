@@ -1,5 +1,6 @@
 import re
 import sys
+import logging
 from abc import ABC, abstractmethod
 from typing import Mapping
 from collections import UserDict
@@ -28,7 +29,6 @@ class RootNode(Node, WSGICallable):
         exctype, exc, traceback = exc_info
         if isinstance(exc, HTTPError):
             return Response(exc.status, body=exc.body)
-        return Response(500)
 
     def __call__(self, environ: Environ, start_response: StartResponse):
         # according to PEP 3333 the native string representing PATH_INFO
