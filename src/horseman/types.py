@@ -1,34 +1,25 @@
 from http import HTTPStatus
 from types import TracebackType
-from typing import (
-    Any,
-    ByteString,
-    Callable,
-    Iterable,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Literal,
-)
+import typing as t
 
-HTTPMethod = Literal[
+
+HTTPMethod = t.Literal[
     "GET", "HEAD", "PUT", "DELETE", "PATCH", "POST", "OPTIONS"
 ]
+HTTPMethods = t.Iterable[HTTPMethod]
 
-Boundary = TypeVar('Boundary', str, bytes)
-Charset = TypeVar('Charset', str, bytes)
-MIMEType = TypeVar('MIMEType', str, bytes)
-HTTPCode = TypeVar('HTTPCode', HTTPStatus, int)
-StatusCode = TypeVar('StatusCode', str, bytes)
-URLParameter = TypeVar('URLParameter')
+Boundary = t.TypeVar('Boundary', str, bytes)
+Charset = t.TypeVar('Charset', str, bytes)
+MIMEType = t.TypeVar('MIMEType', str, bytes)
+HTTPCode = t.TypeVar('HTTPCode', HTTPStatus, int)
+StatusCode = t.TypeVar('StatusCode', str, bytes)
+URLParameter = t.TypeVar('URLParameter')
 
-Environ = Mapping[str, Any]
-ExceptionInfo = Tuple[Exception, Any, TracebackType]
-ResponseHeaders = Sequence[Tuple[str, str]]
-StartResponse = Callable[
-    [StatusCode, ResponseHeaders, Optional[ExceptionInfo]],
-    Optional[Callable[[ByteString], None]]
+Environ = t.Mapping[str, Any]
+ExceptionInfo = t.Tuple[Exception, t.Any, t.TracebackType]
+ResponseHeaders = t.Iterable[t.Tuple[str, str]]
+StartResponse = t.Callable[
+    [StatusCode, ResponseHeaders, t.Optional[ExceptionInfo]],
+    t.Optional[t.Callable[[t.ByteString], None]]
 ]
-WSGICallable = Callable[[Environ, StartResponse], Iterable[bytes]]
+WSGICallable = t.Callable[[Environ, StartResponse], t.Iterable[bytes]]
