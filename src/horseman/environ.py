@@ -32,6 +32,10 @@ class WSGIEnvironWrapper(Environ):
         return self._environ == other._environ
 
     @unique
+    def method(self):
+        return self._environ.get('REQUEST_METHOD', 'GET').upper()
+
+    @unique
     def body(self):
         return self._environ['wsgi.input']
 
