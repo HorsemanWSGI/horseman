@@ -11,26 +11,6 @@ def file_iterator(path: Path, chunk: int = 4096) -> t.Iterator[bytes]:
             yield data
 
 
-class unique:  # Originally taken from pyramid.decorator
-    """Cache a property.
-    Use as a method decorator.  It operates almost exactly like the
-    Python ``@property`` decorator, but it puts the result of the
-    method it decorates into the instance dict after the first call,
-    effectively replacing the function it decorates with an instance
-    variable.
-    """
-    def __init__(self, wrapped):
-        self.wrapped = wrapped
-        self.__doc__ = wrapped.__doc__
-
-    def __get__(self, inst, objtype=None):
-        if inst is None:
-            return self
-        val = self.wrapped(inst)
-        setattr(inst, self.wrapped.__name__, val)
-        return val
-
-
 # https://peps.python.org/pep-0594/
 # Copied from CGI to avoid python 3.11 deprecating and python 3.13 removal
 def _parseparam(s: str) -> t.Generator[str, None, None]:

@@ -1,7 +1,7 @@
 import typing as t
 import urllib.parse
+from functools import cached_property
 from horseman.types import Environ
-from horseman.utils import unique
 from horseman.parsers import Data, parser
 from horseman.datastructures import Cookies, ContentType, Query
 
@@ -11,7 +11,7 @@ class WSGIEnvironWrapper(Environ):
     _environ: Environ
 
     def __init__(self, environ: Environ):
-        if instance(environ, WSGIEnvironWrapper):
+        if isinstance(environ, WSGIEnvironWrapper):
             raise TypeError(
                 f'{self.__class__!r} cannot wrap a subclass of itself.')
         self._environ = environ
@@ -30,46 +30,46 @@ class WSGIEnvironWrapper(Environ):
             return NotImplementedError()
         return self._environ == other._environ
 
-    @unique
-    def method(self):
+    @cached_property
+    def method(self) -> str:
         return self._environ.get('REQUEST_METHOD', 'GET').upper()
 
-    @unique
-    def body(self):
+    @cached_property
+    def body(self) -> t.BinaryIO:
         return self._environ['wsgi.input']
 
-    @unique
+    @cached_property
     def data(self) -> Data:
         if self.content_type:
             return parser(self.body, self.content_type)
         return Data()
 
-    @unique
-    def script_name(self):
+    @cached_property
+    def script_name(self) -> str:
         return urllib.parse.quote(self._environ.get('SCRIPT_NAME', ''))
 
-    @unique
-    def path(self):
+    @cached_property
+    def path(self) -> str:
         if path := self._environ.get('PATH_INFO'):
             return path.encode('latin-1').decode('utf-8')
         return '/'
 
-    @unique
-    def query(self):
+    @cached_property
+    def query(self) -> Query:
         return Query.from_string(self._environ.get('QUERY_STRING', ''))
 
-    @unique
-    def cookies(self):
+    @cached_property
+    def cookies(self) -> t.Optional[Cookies]:
         if cookie_header := self._environ.get('HTTP_COOKIE'):
             return Cookies.from_string(cookie_header)
 
-    @unique
-    def content_type(self):
+    @cached_property
+    def content_type(self) -> t.Optional[ContentType]:
         if content_type := self._environ.get('CONTENT_TYPE'):
             return ContentType.from_string(content_type)
 
-    @unique
-    def application_uri(self):
+    @cached_property
+    def application_uri(self) -> str:
         scheme = self._environ.get('wsgi.url_scheme', 'http')
         http_host = self._environ.get('HTTP_HOST')
         if not http_host:
@@ -86,7 +86,7 @@ class WSGIEnvironWrapper(Environ):
             return f'{scheme}://{server}{self.script_name}'
         return f'{scheme}://{server}:{port}{self.script_name}'
 
-    def uri(self, include_query=True):
+    def uri(self, include_query: bool = True) -> str:
         path_info = urllib.parse.quote(self._environ.get('PATH_INFO', ''))
         if include_query:
             qs = urllib.parse.quote(self._environ.get('QUERY_STRING', ''))
