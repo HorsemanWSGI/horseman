@@ -2,7 +2,7 @@ import typing as t
 from http import HTTPStatus
 from multidict import CIMultiDict
 from horseman.datastructures import Cookies
-from horseman.types import Environ, HTTPCode, StartResponse, WSGICallable
+from horseman.types import Environ, HTTPCode, StartResponse
 
 
 BODYLESS = frozenset((

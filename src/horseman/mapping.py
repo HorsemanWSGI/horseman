@@ -1,6 +1,5 @@
 import re
 import sys
-import logging
 import typing as t
 from abc import ABC, abstractmethod
 from collections import UserDict

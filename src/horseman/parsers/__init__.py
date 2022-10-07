@@ -1,11 +1,9 @@
 import orjson
 import typing as t
-from http import HTTPStatus
 from urllib.parse import parse_qsl
 from horseman.parsers.parser import BodyParser
 from horseman.parsers.multipart import Multipart
-from horseman.exceptions import HTTPError
-from horseman.datastructures import ContentType, Data
+from horseman.datastructures import Data
 from horseman.types import Boundary, Charset, MIMEType
 
 
@@ -27,7 +25,7 @@ def json_parser(body: t.IO, mimetype: MIMEType,
 
 @parser.register('multipart/form-data')
 def multipart_parser(body: t.IO, mimetype: MIMEType,
-                     boundary: t.Optional[str] = None) -> Data:
+                     boundary: t.Optional[Boundary] = None) -> Data:
     if boundary is None:
         raise ValueError('Missing boundary in Content-Type.')
     content_parser = Multipart(f";boundary={boundary}")
