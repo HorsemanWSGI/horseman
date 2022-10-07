@@ -8,15 +8,18 @@ HTTPMethod = t.Literal[
 ]
 HTTPMethods = t.Iterable[HTTPMethod]
 
-Boundary = t.TypeVar('Boundary', str, bytes)
-Charset = t.TypeVar('Charset', str, bytes)
-MIMEType = t.TypeVar('MIMEType', str, bytes)
-HTTPCode = t.TypeVar('HTTPCode', HTTPStatus, int)
-StatusCode = t.TypeVar('StatusCode', str, bytes)
+Boundary = t.Union[str, bytes]
+Charset = t.Union[str, bytes]
+MIMEType = t.Union[str, bytes]
+HTTPCode = t.Union[HTTPStatus, int]
+StatusCode = t.Union[str, bytes]
 URLParameter = t.TypeVar('URLParameter')
 
-Environ = t.Mapping[str, t.Any]
-ExceptionInfo = t.Tuple[Exception, t.Any, TracebackType]
+Environ = t.MutableMapping[str, t.Any]
+ExceptionInfo = t.Union[
+    t.Tuple[t.Type[BaseException], BaseException, TracebackType],
+    t.Tuple[None, None, None]
+]
 ResponseHeaders = t.Iterable[t.Tuple[str, str]]
 StartResponse = t.Callable[
     [StatusCode, ResponseHeaders, t.Optional[ExceptionInfo]],

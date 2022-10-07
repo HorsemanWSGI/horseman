@@ -1,4 +1,3 @@
-import orjson
 import typing as t
 from http import HTTPStatus
 from multidict import CIMultiDict
@@ -14,35 +13,30 @@ BODYLESS = frozenset((
     HTTPStatus.NOT_MODIFIED
 ))
 
-REDIRECT = frozenset((
-    HTTPStatus.MULTIPLE_CHOICES,
-    HTTPStatus.MOVED_PERMANENTLY,
-    HTTPStatus.FOUND,
-    HTTPStatus.SEE_OTHER,
-    HTTPStatus.NOT_MODIFIED,
-    HTTPStatus.USE_PROXY,
-    HTTPStatus.TEMPORARY_REDIRECT,
-    HTTPStatus.PERMANENT_REDIRECT
-))
+BodyT = t.Union[str, bytes, t.Iterator[bytes]]
+HeadersT = t.Union[t.Mapping[str, str], t.Iterable[t.Tuple[str, str]]]
 
 
-class Headers(CIMultiDict):
+class Headers(CIMultiDict[str]):
 
     __slots__ = ('_cookies',)
 
-    cookies: Cookies
+    _cookies: Cookies
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._cookies = None
+    def __new__(cls, *args, **kwargs):
+        if not kwargs and len(args) == 1 and isinstance(args[0], cls):
+            return args[0]
+        inst = super().__new__(cls, *args, **kwargs)
+        inst._cookies = None
+        return inst
 
     @property
-    def cookies(self):
+    def cookies(self) -> Cookies:
         if self._cookies is None:
             self._cookies = Cookies()
         return self._cookies
 
-    def items(self) -> t.Iterable[t.Tuple[str, str]]:
+    def items(self):
         yield from super().items()
         if self._cookies:
             for cookie in self._cookies.values():
@@ -70,21 +64,22 @@ class Headers(CIMultiDict):
 Finisher = t.Callable[['Response'], None]
 
 
-class Response(WSGICallable):
+class Response:
 
     __slots__ = ('status', 'body', 'headers', '_finishers')
 
     status: HTTPStatus
-    body: t.Optional[t.Union[t.AnyStr, t.Iterator[bytes]]]
+    body: t.Optional[BodyT]
     headers: Headers
     _finishers: t.Optional[t.Deque[Finisher]]
 
-    def __init__(self, status: HTTPCode = 200,
-                 body: t.Optional[t.Iterable] = None,
-                 headers: t.Optional[Headers] = None):
+    def __init__(self,
+                 status: HTTPCode = 200,
+                 body: BodyT = None,
+                 headers: t.Optional[HeadersT] = None):
         self.status = HTTPStatus(status)
         self.body = body
-        self.headers = Headers(headers or [])
+        self.headers = Headers(headers or ())  # idempotent.
         self._finishers = None
 
     @property
@@ -126,54 +121,3 @@ class Response(WSGICallable):
         status = f'{self.status.value} {self.status.phrase}'
         start_response(status, list(self.headers.items()))
         return self
-
-    @classmethod
-    def redirect(cls, location, code: HTTPCode = 303,
-                 body: t.Optional[t.Iterable] = None,
-                 headers: t.Optional[Headers] = None) -> 'Response':
-        if code not in REDIRECT:
-            raise ValueError(f"{code}: unknown redirection code.")
-        if not headers:
-            headers = {'Location': location}
-        else:
-            headers['Location'] = location
-        return cls(code, body, headers)
-
-    @classmethod
-    def from_file_iterator(cls, filename: str, body: t.Iterable[bytes],
-                           headers: t.Optional[Headers] = None):
-        if headers is None:
-            headers = {
-                "Content-Disposition": f"attachment;filename={filename}"}
-        elif "Content-Disposition" not in headers:
-            headers["Content-Disposition"] = (
-                f"attachment;filename={filename}")
-        return cls(200, body, headers)
-
-    @classmethod
-    def to_json(cls, code: HTTPCode = 200, body: t.Optional[t.Any] = None,
-                headers: t.Optional[Headers] = None):
-        data = orjson.dumps(body)
-        if headers is None:
-            headers = {'Content-Type': 'application/json'}
-        else:
-            headers['Content-Type'] = 'application/json'
-        return cls(code, data, headers)
-
-    @classmethod
-    def from_json(cls, code: HTTPCode = 200, body: t.AnyStr = '',
-                  headers: t.Optional[Headers] = None):
-        if headers is None:
-            headers = {'Content-Type': 'application/json'}
-        else:
-            headers['Content-Type'] = 'application/json'
-        return cls(code, body, headers)
-
-    @classmethod
-    def html(cls, code: HTTPCode = 200, body: t.AnyStr = '',
-             headers: t.Optional[Headers] = None):
-        if headers is None:
-            headers = {'Content-Type': 'text/html; charset=utf-8'}
-        else:
-            headers['Content-Type'] = 'text/html; charset=utf-8'
-        return cls(code, body, headers)

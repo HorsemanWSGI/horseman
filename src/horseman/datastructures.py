@@ -6,12 +6,6 @@ from horseman.types import MIMEType
 from horseman.utils import parse_header
 
 
-KT = t.TypeVar("KT")
-VT = t.TypeVar("VT")
-Default = t.TypeVar("Default")
-Pairs = t.Iterable[t.Tuple[KT, VT]]
-
-
 class Data(t.NamedTuple):
     form: t.Optional[t.Iterable[t.Tuple[str, t.Any]]] = None
     json: t.Optional[t.Union[t.Dict, t.List]] = None  # not too specific
@@ -42,7 +36,7 @@ class MediaType(ContentType):
 
     mimetype: MIMEType
     maintype: str
-    subtype: str
+    subtype: t.Optional[str]
     options: t.Mapping[str, str]
 
     def __new__(cls, value: str):
@@ -55,7 +49,7 @@ class MediaType(ContentType):
             maintype = "*"
             subtype = "*"
         elif '/' in mimetype:
-            type_parts = type.split('/')
+            type_parts = mimetype.split('/')
             if not type_parts or len(type_parts) > 2:
                 raise ValueError(f"Can't parse mimetype {mimetype!r}")
             maintype, subtype = type_parts
@@ -96,23 +90,18 @@ class Query(frozendict[str, t.Sequence[str]]):
     FALSE_STRINGS = {'f', 'false', 'no', '0', 'off'}
     NONE_STRINGS = {'n', 'none', 'null'}
 
-    def get(self, name: str, default: Default = None
-            ) -> t.Union[str, Default]:
+    def get(self, name: str, default=None):
         """Return the first value of the found list.
         """
-        return super().get(name, [default])[0]
+        return super().get(name, [None])[0]
 
-    def getlist(self, name: str, default: Default = ...
-                ) -> t.Sequence[str]:
+    def getlist(self, name: str) -> t.Sequence[str]:
         """Return the value list
         """
-        if default is ...:
-            default = []
-        return super().get(name, default)
+        return super().get(name, [])
 
-    def bool(self, key: str, default: Default = None
-             ) -> t.Union[bool, Default]:
-        value = self.get(key, default)
+    def as_bool(self, key: str) -> t.Optional[bool]:
+        value = self[key][0]
         if value in (True, False, None):
             return value
         value = value.lower()
@@ -124,11 +113,11 @@ class Query(frozendict[str, t.Sequence[str]]):
             return None
         raise ValueError(f"Can't cast {value!r} to boolean.")
 
-    def int(self, key: str, default=...):
-        return int(self.get(key, default))
+    def as_int(self, key: str) -> int:
+        return int(self[key][0])
 
-    def float(self, key: str, default=...):
-        return float(self.get(key, default))
+    def as_float(self, key: str) -> float:
+        return float(self[key][0])
 
     @classmethod
     def from_string(

@@ -1,8 +1,8 @@
 import re
 import sys
 import logging
+import typing as t
 from abc import ABC, abstractmethod
-from typing import Mapping
 from collections import UserDict
 from horseman.exceptions import HTTPError
 from horseman.response import Response
@@ -20,7 +20,7 @@ class Node(ABC):
         pass
 
 
-class RootNode(Node, WSGICallable):
+class RootNode(Node):
 
     def handle_exception(self, exc_info: ExceptionInfo, environ: Environ):
         """This method handles exceptions happening while the
@@ -52,15 +52,19 @@ class RootNode(Node, WSGICallable):
                 raise
             yield from iterable(environ, start_response)
         finally:
-            if iterable is not None and hasattr(iterable, 'close'):
-                try:
-                    iterable.close()
-                except Exception:
-                    self.handle_exception(sys.exc_info(), environ)
-                    raise
+            if iterable is not None:
+                closer: t.Optional[t.Callable[[], None]] = getattr(
+                    iterable, 'close', None
+                )
+                if closer is not None:
+                    try:
+                        closer()
+                    except Exception:
+                        self.handle_exception(sys.exc_info(), environ)
+                        raise
 
 
-class Mapping(RootNode, UserDict, Mapping[str, WSGICallable]):
+class Mapping(RootNode, UserDict, t.Mapping[str, WSGICallable]):
 
     NORMALIZE = re.compile('//+')
 

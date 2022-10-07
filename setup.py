@@ -7,7 +7,6 @@ setup(
         'biscuits >= 0.3.0',
         'multidict >= 5.1',
         'multifruits >= 0.1.5',
-        'orjson >= 3.5',
         'frozendict >= 2.3',
     ],
     extras_require={
