@@ -10,12 +10,11 @@ class WSGIEnvironWrapper(Environ):
 
     _environ: Environ
 
-    def __new__(cls, environ):
-        if isinstance(environ, cls):
-            return environ
-        instance = super().__new__(cls)
-        instance._environ = environ
-        return instance
+    def __init__(self, environ: Environ):
+        if instance(environ, WSGIEnvironWrapper):
+            raise TypeError(
+                f'{self.__class__!r} cannot wrap a subclass of itself.')
+        self._environ = environ
 
     def __getitem__(self, key: str) -> t.Any:
         return self._environ[key]
