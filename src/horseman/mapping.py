@@ -37,7 +37,7 @@ class RootNode(Node):
         # Note that it's valid for WSGI server to omit the value if it's
         # empty.
         path_info = environ.get(
-            'PATH_INFO', '').encode('latin-1').decode('utf-8')
+            'PATH_INFO', '').encode('latin-1').decode('utf-8') or '/'
         if path_info:
             # Normalize the slashes to avoid things like '//test'
             path_info = slashes_normalization.sub("/", path_info)
