@@ -1,6 +1,6 @@
 import pytest
 from http import HTTPStatus
-from horseman.http import HTTPError
+from horseman.exceptions import HTTPError
 
 
 def test_exception():

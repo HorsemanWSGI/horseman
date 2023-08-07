@@ -1,3 +1,4 @@
+import typing as t
 from io import BytesIO
 from multifruits import Parser, extract_filename, parse_content_disposition
 
@@ -17,7 +18,7 @@ class Multipart:
 
     def __init__(self, content_type: str):
         self._parser = Parser(self, content_type.encode())
-        self.form = []
+        self.form: t.List[t.Tuple[str, t.Any]] = []
 
     def feed_data(self, data: bytes):
         self._parser.feed_data(data)

@@ -1,7 +1,8 @@
 import pytest
-from horseman.meta import Node
+import webtest
 from horseman.mapping import Mapping
 from horseman.response import Response
+from horseman.exceptions import HTTPError
 
 
 def basic_app(environ, start_fn):
@@ -12,11 +13,6 @@ def basic_app(environ, start_fn):
 def other_app(environ, start_fn):
     start_fn('200 OK', [('Content-Type', 'text/plain')])
     return [b"Something else\n"]
-
-
-def test_mapping():
-    node = Mapping()
-    assert isinstance(node, Node)
 
 
 def test_normalizing():
@@ -99,8 +95,9 @@ def test_mapping_set_del_item():
 def test_mapping_resolve():
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/no'}
     node = Mapping({"/test": basic_app})
-    assert node.resolve('/no', environ) is None
-    assert environ == {'PATH_INFO': '/no', 'SCRIPT_NAME': ''}
+    with pytest.raises(HTTPError) as exc:
+        node.resolve('/no', environ)
+    assert exc.value.status == 404
 
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/test'}
     node = Mapping({"/test": basic_app})
@@ -123,21 +120,24 @@ def test_mapping_competing_apps():
 def test_nested_mapping():
     from unittest.mock import Mock
 
+    start_response = Mock()
+
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/no'}
     node = Mapping({"/some":  Mapping({'/thing': basic_app})})
-    response = node(environ, Mock())
-    assert isinstance(response, Response)
-    assert response.status == 404
+    body = b"".join(node(environ, start_response))
+    start_response.assert_called_with('404 Not Found', [])
     assert environ == {'SCRIPT_NAME': '', 'PATH_INFO': '/no'}
+    start_response.reset()
 
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/some'}
     node = Mapping({"/some":  Mapping({'/thing': basic_app})})
-    response = node(environ, Mock())
-    assert response.status == 404
-    assert environ == {'SCRIPT_NAME': '/some', 'PATH_INFO': ''}
+    response = node(environ, start_response)
+    start_response.assert_called_with('404 Not Found', [])
+    assert environ == {'SCRIPT_NAME': '', 'PATH_INFO': '/some'}
+    start_response.reset()
 
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/some/thing'}
     node = Mapping({"/some":  Mapping({'/thing': basic_app})})
-    response = node(environ, Mock())
-    assert response == [b'Hello World!\n']
+    response = node(environ, start_response)
+    assert list(response) == [b'Hello World!\n']
     assert environ == {'PATH_INFO': '', 'SCRIPT_NAME': '/some/thing'}
