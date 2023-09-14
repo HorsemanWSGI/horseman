@@ -15,21 +15,14 @@ def other_app(environ, start_fn):
     return [b"Something else\n"]
 
 
-def test_normalizing():
-    with pytest.raises(ValueError):
-        assert Mapping.normalize(1)
-    assert Mapping.normalize('/test') == '/test'
-    assert Mapping.normalize("/") == '/'
-    assert Mapping.normalize("////") == '/'
-    assert Mapping.normalize("//") == '/'
-    assert Mapping.normalize("//") == '/'
-    assert Mapping.normalize('/test//') == '/test/'
+def third_app(environ, start_fn):
+    start_fn('200 OK', [('Content-Type', 'text/plain')])
+    return [b"Something else entirely\n"]
 
 
 def test_mapping_instanciation():
-    with pytest.raises(ValueError) as exc:
-        Mapping(test=1)
-    assert str(exc.value) == "Path must start with '/', got 'test'"
+    node = Mapping(test=basic_app)
+    assert node == {'/test': basic_app}
 
     node = Mapping({"/test": basic_app})
     assert node == {'/test': basic_app}
@@ -43,7 +36,7 @@ def test_mapping_instanciation():
 
 def test_mapping_update():
     node = Mapping({"/test": basic_app})
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         node.update({1: basic_app})
 
     node.update({'/test': other_app})
@@ -76,20 +69,21 @@ def test_mapping_set_del_item():
     node['/'] = basic_app
     assert node == {'/': basic_app}
 
-    with pytest.raises(ValueError) as exc:
-        node['test'] = basic_app
-    assert str(exc.value) == "Path must start with '/', got 'test'"
+    node['test'] = basic_app
+    assert node == {
+        '/': basic_app,
+        '/test': basic_app
+    }
 
     del node['/']
-    assert node == {}
+    assert node == {'/test': basic_app}
 
-    node['/'] = 1
     node['/'] = basic_app
-    assert node == {'/': basic_app}
+    assert node == {'/': basic_app, '/test': basic_app}
 
     script = node.pop('/')
     assert script is basic_app
-    assert node == {}
+    assert node == {'/test': basic_app}
 
 
 def test_mapping_resolve():
@@ -102,7 +96,7 @@ def test_mapping_resolve():
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/test'}
     node = Mapping({"/test": basic_app})
     assert node.resolve('/test', environ) is basic_app
-    assert environ == {'PATH_INFO': '', 'SCRIPT_NAME': '/test'}
+    assert environ == {'PATH_INFO': '/', 'SCRIPT_NAME': '/test'}
 
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/'}
     node = Mapping({"/": basic_app})
@@ -114,7 +108,33 @@ def test_mapping_competing_apps():
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/backend'}
     node = Mapping({"/": basic_app, "/backend": other_app})
     assert node.resolve('/backend', environ) is other_app
-    assert environ == {'PATH_INFO': '', 'SCRIPT_NAME': '/backend'}
+    assert environ == {'PATH_INFO': '/', 'SCRIPT_NAME': '/backend'}
+
+
+def test_mapping_incomplete_name():
+    node = Mapping({
+        "/": basic_app,
+        "/backend_app": other_app,
+        "/backend_api/test": other_app,
+        "/backend": third_app
+    })
+    environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/back'}
+    assert node.resolve('/back', environ) is basic_app
+    assert environ == {'PATH_INFO': '/back', 'SCRIPT_NAME': ''}
+
+    environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/backend_app'}
+    assert node.resolve('/backend_app', environ) is other_app
+    assert environ == {'PATH_INFO': '/', 'SCRIPT_NAME': '/backend_app'}
+
+
+def test_mapping_name_overspill():
+    node = Mapping({
+        "/": basic_app,
+        "/backend": other_app
+    })
+    environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/backender'}
+    assert node.resolve('/backender', environ) is basic_app
+    assert environ == {'PATH_INFO': '/backender', 'SCRIPT_NAME': ''}
 
 
 def test_nested_mapping():
@@ -140,4 +160,4 @@ def test_nested_mapping():
     node = Mapping({"/some":  Mapping({'/thing': basic_app})})
     response = node(environ, start_response)
     assert list(response) == [b'Hello World!\n']
-    assert environ == {'PATH_INFO': '', 'SCRIPT_NAME': '/some/thing'}
+    assert environ == {'PATH_INFO': '/', 'SCRIPT_NAME': '/some/thing'}

@@ -1,15 +1,12 @@
-import re
 import sys
 import typing as t
+from pathlib import PurePosixPath
 from abc import ABC, abstractmethod
 from collections import UserDict
 from horseman.exceptions import HTTPError
 from horseman.response import Response
 from horseman.types import (
     WSGICallable, Environ, StartResponse, ExceptionInfo)
-
-
-slashes_normalization = re.compile(r"/+")
 
 
 class Node(ABC):
@@ -40,7 +37,7 @@ class RootNode(Node):
             'PATH_INFO', '').encode('latin-1').decode('utf-8') or '/'
         if path_info:
             # Normalize the slashes to avoid things like '//test'
-            path_info = slashes_normalization.sub("/", path_info)
+            path_info = str(PurePosixPath(path_info))
         iterable = None
         try:
             iterable = self.resolve(path_info, environ)
@@ -65,25 +62,18 @@ class RootNode(Node):
 
 class Mapping(RootNode, UserDict, t.Mapping[str, WSGICallable]):
 
-    NORMALIZE = re.compile('//+')
-
-    @classmethod
-    def normalize(cls, path: str):
-        if not isinstance(path, str):
-            raise ValueError(f'{cls} accepts only str keys.')
-        if not path.startswith('/'):
-            raise ValueError(f"Path must start with '/', got {path!r}")
-        return cls.NORMALIZE.sub('/', path)
-
     def __setitem__(self, path: str, script: WSGICallable):
-        super().__setitem__(self.normalize(path), script)
+        super().__setitem__(str('/' / PurePosixPath(path)), script)
 
     def resolve(self, path_info: str, environ: Environ) -> WSGICallable:
-        for script_name in sorted(self.keys(), key=len, reverse=True):
-            if path_info.startswith(script_name):
-                script = self[script_name]
-                name = script_name.rstrip('/')
-                environ['SCRIPT_NAME'] += name
-                environ['PATH_INFO'] = path_info[len(name):]
+        uri = PurePosixPath(path_info)
+        for current in (uri, *uri.parents):
+            if (script := self.get(str(current))) is not None:
+                if current.parents:
+                    environ['SCRIPT_NAME'] += str(current)
+                if current != uri:
+                    environ['PATH_INFO'] = f'/{uri.relative_to(current)}'
+                else:
+                    environ['PATH_INFO'] = '/'
                 return script
         raise HTTPError(404)
