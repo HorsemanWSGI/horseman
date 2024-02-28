@@ -1,6 +1,6 @@
 import pytest
 from horseman.environ import WSGIEnvironWrapper
-from horseman.datastructures import Query, Data
+from horseman.datastructures import Query, Data, ContentType, Cookies
 from webtest.app import TestRequest as Request
 
 
@@ -14,8 +14,8 @@ def test_environ():
     assert environ.body.read() == b''
     assert environ.query == Query({'key': ('1',)})
     assert environ.script_name == ''
-    assert environ.cookies is None
-    assert environ.content_type is None
+    assert environ.cookies == Cookies('')
+    assert environ.content_type == ContentType('')
     assert environ.data == Data()
     assert environ.application_uri == 'http://localhost'
     assert environ.uri() == 'http://localhost/?key%3D1'
