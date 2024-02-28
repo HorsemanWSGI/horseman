@@ -69,6 +69,10 @@ class WSGIEnvironWrapper(Environ):
         return Data()
 
     @immutable_cached_property
+    def domain(self) -> str:
+        return self._environ['HTTP_HOST'].split(':', 1)[0]
+
+    @immutable_cached_property
     def script_name(self) -> str:
         return urllib.parse.quote(self._environ.get('SCRIPT_NAME', ''))
 
@@ -83,16 +87,12 @@ class WSGIEnvironWrapper(Environ):
         return Query.from_string(self._environ.get('QUERY_STRING', ''))
 
     @immutable_cached_property
-    def cookies(self) -> t.Optional[Cookies]:
-        if cookie_header := self._environ.get('HTTP_COOKIE'):
-            return Cookies.from_string(cookie_header)
-        return None
+    def cookies(self) -> Cookies:
+        return Cookies.from_string(self._environ.get('HTTP_COOKIE', ''))
 
     @immutable_cached_property
-    def content_type(self) -> t.Optional[ContentType]:
-        if content_type := self._environ.get('CONTENT_TYPE'):
-            return ContentType(content_type)
-        return None
+    def content_type(self) -> ContentType:
+        return ContentType(self._environ.get('CONTENT_TYPE', ''))
 
     @immutable_cached_property
     def application_uri(self) -> str:
