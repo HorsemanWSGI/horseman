@@ -42,7 +42,7 @@ class Headers(CIMultiDict[str]):
             for cookie in self._cookies.values():
                 yield 'Set-Cookie', str(cookie)
 
-    def coalesced_items(self) -> t.Iterable[t.Tuple[str, str]]:
+    def coalesced_items(self) -> t.Iterable[t.Tuple[bytes, bytes]]:
         """Coalescence of headers does NOT garanty order of headers.
         It garanties the order of the header values, though.
         """
@@ -56,9 +56,9 @@ class Headers(CIMultiDict[str]):
             values = self.getall(header)
             if header == 'Set-Cookie' and cookies:
                 values = [*values, *cookies]
-            yield header, ', '.join(values)
+            yield header.encode(), ', '.join((v.encode() for v in values))
         if 'Set-Cookie' not in self and cookies:
-            yield 'Set-Cookie', ', '.join(cookies)
+            yield b'Set-Cookie', ', '.join((c.encode() for c in cookies))
 
 
 Finisher = t.Callable[['Response'], None]

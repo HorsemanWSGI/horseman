@@ -4,7 +4,7 @@ from pathlib import PurePosixPath
 from abc import ABC, abstractmethod
 from collections import UserDict
 from horseman.exceptions import HTTPError
-from horseman.response import Response
+from horseman.wsgi.response import Response
 from horseman.types import (
     WSGICallable, Environ, StartResponse, ExceptionInfo)
 

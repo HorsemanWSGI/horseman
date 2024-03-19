@@ -1,8 +1,8 @@
 import orjson
 import typing as t
 from urllib.parse import parse_qsl
-from horseman.parsers.parser import BodyParser
-from horseman.parsers.multipart import Multipart
+from horseman.asgi.parsers.parser import BodyParser
+from horseman.wsgi.parsers.multipart import Multipart
 from horseman.datastructures import Data
 from horseman.types import Boundary, Charset, MIMEType
 
@@ -11,9 +11,11 @@ parser = BodyParser()
 
 
 @parser.register('application/json')
-def json_parser(body: t.IO, mimetype: MIMEType,
-                charset: Charset = 'utf-8') -> Data:
-    data = body.read()
+async def json_parser(body: t.AsyncGenerator, mimetype: MIMEType,
+                      charset: Charset = 'utf-8') -> Data:
+    data = b''
+    async for chunk in body:
+        data += chunk
     if not data:
         raise ValueError('The body of the request is empty.')
     try:
@@ -24,12 +26,12 @@ def json_parser(body: t.IO, mimetype: MIMEType,
 
 
 @parser.register('multipart/form-data')
-def multipart_parser(body: t.IO, mimetype: MIMEType,
-                     boundary: t.Optional[Boundary] = None) -> Data:
+async def multipart_parser(body: t.AsyncGenerator, mimetype: MIMEType,
+                           boundary: t.Optional[Boundary] = None) -> Data:
     if boundary is None:
         raise ValueError('Missing boundary in Content-Type.')
     content_parser = Multipart(f";boundary={boundary}")
-    while chunk := body.read(8192):
+    async for chunk in body:
         try:
             content_parser.feed_data(chunk)
         except ValueError:
@@ -38,9 +40,11 @@ def multipart_parser(body: t.IO, mimetype: MIMEType,
 
 
 @parser.register('application/x-www-form-urlencoded')
-def urlencoded_parser(body: t.IO, mimetype: MIMEType,
-                      charset: Charset = 'utf-8') -> Data:
-    data = body.read()
+async def urlencoded_parser(body: t.AsyncGenerator, mimetype: MIMEType,
+                            charset: Charset = 'utf-8') -> Data:
+    data = b''
+    async for chunk in body:
+        data += chunk
     if not data:
         raise ValueError('The body of the request is empty.')
     try:

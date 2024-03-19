@@ -1,10 +1,7 @@
 import typing as t
-import urllib.parse
-from collections.abc import Mapping
 from functools import cached_property
 from horseman.types import Environ
-from horseman.parsers import Data, parser
-from horseman.datastructures import Cookies, ContentType, Query
+from horseman.datastructures import Data, Query, Cookies, ContentType
 
 
 class immutable_cached_property(cached_property):
