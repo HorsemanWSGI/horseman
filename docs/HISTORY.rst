@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.0a1 (2026-03-24)
+------------------
+
+  * First alpha release with major cleanup and version pin.
+
+
 0.6 (2022-08-25)
 ----------------
 
