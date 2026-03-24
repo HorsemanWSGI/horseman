@@ -12,7 +12,7 @@ from horseman.types import (
 class Node(ABC):
 
     @abstractmethod
-    def resolve(self, path_info: str, environ: Environ) -> WSGICallable:
+    def resolve(self, environ: Environ) -> WSGICallable:
         pass
 
 
@@ -27,20 +27,9 @@ class RootNode(Node):
             return Response(exc.status, body=exc.body)
 
     def __call__(self, environ: Environ, start_response: StartResponse):
-        # according to PEP 3333 the native string representing PATH_INFO
-        # (and others) can only contain unicode codepoints from 0 to 255,
-        # which is why we need to decode to latin-1 instead of utf-8 here.
-        # We transform it back to UTF-8
-        # Note that it's valid for WSGI server to omit the value if it's
-        # empty.
-        path_info = environ.get(
-            'PATH_INFO', '').encode('latin-1').decode('utf-8') or '/'
-        if path_info:
-            # Normalize the slashes to avoid things like '//test'
-            path_info = str(PurePosixPath(path_info))
         iterable = None
         try:
-            iterable = self.resolve(path_info, environ)
+            iterable = self.resolve(environ)
             yield from iterable(environ, start_response)
         except Exception:
             iterable = self.handle_exception(sys.exc_info(), environ)
@@ -65,8 +54,8 @@ class Mapping(RootNode, UserDict, t.Mapping[str, WSGICallable]):
     def __setitem__(self, path: str, script: WSGICallable):
         super().__setitem__(str('/' / PurePosixPath(path)), script)
 
-    def resolve(self, path_info: str, environ: Environ) -> WSGICallable:
-        uri = PurePosixPath(path_info)
+    def resolve(self, environ: Environ) -> WSGICallable:
+        uri = PurePosixPath(environ.get('PATH_INFO', '/'))
         for current in (uri, *uri.parents):
             if (script := self.get(str(current))) is not None:
                 if current.parents:

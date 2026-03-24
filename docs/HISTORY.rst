@@ -1,6 +1,13 @@
 CHANGES
 =======
 
+1.0a4 (2026-03-24)
+------------------
+
+  * Node `resolve` no longer takes a path_info. This is taken from the
+    environ directly to avoid repetition.
+
+
 1.0a3 (2026-03-24)
 ------------------
 

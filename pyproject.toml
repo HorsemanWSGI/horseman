@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "horseman"
-version = "1.0a3"
+version = "1.0a4"
 license = {text = "BSD-3-Clause"}
 authors = [{name = "Souheil Chelfouh", email = "trollfot@gmail.com"}]
 maintainers = [{name = "Souheil Chelfouh", email = "trollfot@gmail.com"}]

@@ -1,5 +1,6 @@
 import typing as t
 import urllib.parse
+from pathlib import PurePosixPath
 from collections.abc import Mapping
 from functools import cached_property
 from horseman.types import Environ
@@ -78,8 +79,17 @@ class WSGIEnvironWrapper(Environ):
 
     @immutable_cached_property
     def path(self) -> str:
+        # according to PEP 3333 the native string representing PATH_INFO
+        # (and others) can only contain unicode codepoints from 0 to 255,
+        # which is why we need to decode to latin-1 instead of utf-8 here.
+        # We transform it back to UTF-8
+        # Note that it's valid for WSGI server to omit the value if it's
+        # empty.
         if path := self._environ.get('PATH_INFO'):
-            return path.encode('latin-1').decode('utf-8')
+            # Normalize the slashes to avoid things like '//test'
+             return str(PurePosixPath(
+                 path.encode('latin-1').decode('utf-8')
+             ))
         return '/'
 
     @immutable_cached_property

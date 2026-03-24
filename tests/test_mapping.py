@@ -90,24 +90,24 @@ def test_mapping_resolve():
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/no'}
     node = Mapping({"/test": basic_app})
     with pytest.raises(HTTPError) as exc:
-        node.resolve('/no', environ)
+        node.resolve(environ)
     assert exc.value.status == 404
 
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/test'}
     node = Mapping({"/test": basic_app})
-    assert node.resolve('/test', environ) is basic_app
+    assert node.resolve(environ) is basic_app
     assert environ == {'PATH_INFO': '/', 'SCRIPT_NAME': '/test'}
 
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/'}
     node = Mapping({"/": basic_app})
-    assert node.resolve('/', environ) is basic_app
+    assert node.resolve(environ) is basic_app
     assert environ == {'PATH_INFO': '/', 'SCRIPT_NAME': ''}
 
 
 def test_mapping_competing_apps():
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/backend'}
     node = Mapping({"/": basic_app, "/backend": other_app})
-    assert node.resolve('/backend', environ) is other_app
+    assert node.resolve(environ) is other_app
     assert environ == {'PATH_INFO': '/', 'SCRIPT_NAME': '/backend'}
 
 
@@ -119,11 +119,11 @@ def test_mapping_incomplete_name():
         "/backend": third_app
     })
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/back'}
-    assert node.resolve('/back', environ) is basic_app
+    assert node.resolve(environ) is basic_app
     assert environ == {'PATH_INFO': '/back', 'SCRIPT_NAME': ''}
 
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/backend_app'}
-    assert node.resolve('/backend_app', environ) is other_app
+    assert node.resolve(environ) is other_app
     assert environ == {'PATH_INFO': '/', 'SCRIPT_NAME': '/backend_app'}
 
 
@@ -133,7 +133,7 @@ def test_mapping_name_overspill():
         "/backend": other_app
     })
     environ = {'SCRIPT_NAME': '', 'PATH_INFO': '/backender'}
-    assert node.resolve('/backender', environ) is basic_app
+    assert node.resolve(environ) is basic_app
     assert environ == {'PATH_INFO': '/backender', 'SCRIPT_NAME': ''}
 
 
