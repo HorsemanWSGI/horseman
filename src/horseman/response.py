@@ -39,7 +39,7 @@ class Headers(CIMultiDict[str]):
 
     def items(self) -> t.Iterable[t.Tuple[str, str]]:
         for k, v in super().items():
-            return str(k), str(v)
+            yield str(k), str(v)
         if self._cookies:
             for cookie in self._cookies.values():
                 yield 'Set-Cookie', str(cookie)
