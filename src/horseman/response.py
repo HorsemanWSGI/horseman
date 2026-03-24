@@ -37,8 +37,9 @@ class Headers(CIMultiDict[str]):
             self._cookies = Cookies()
         return self._cookies
 
-    def items(self):
-        yield from super().items()
+    def items(self) -> t.Iterable[t.Tuple[str, str]]:
+        for k, v in super().items():
+            return str(k), str(v)
         if self._cookies:
             for cookie in self._cookies.values():
                 yield 'Set-Cookie', str(cookie)
@@ -57,7 +58,7 @@ class Headers(CIMultiDict[str]):
             values = self.getall(header)
             if header == 'Set-Cookie' and cookies:
                 values = [*values, *cookies]
-            yield header, ', '.join(values)
+            yield str(header), ', '.join(values)
         if 'Set-Cookie' not in self and cookies:
             yield 'Set-Cookie', ', '.join(cookies)
 

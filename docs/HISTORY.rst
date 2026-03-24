@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.0a3 (2026-03-24)
+------------------
+
+  * Ensure headers cast key and value to str as requested.
+
+
 1.0a2 (2026-03-24)
 ------------------
 
