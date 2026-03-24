@@ -8,6 +8,18 @@ def test_empty_headers():
     assert len(headers) == 0
 
 
+def test_headers_idempotency():
+    headers = Headers({'Link': 'test'})
+    assert Headers(headers) == headers
+
+    headers = Headers(headers)
+    assert headers['Link'] == 'test'
+    headers.cookies.set('test', "{'this': 'is json'}")
+
+    headers = Headers(headers)
+    assert 'test' in headers.cookies
+
+
 def test_add_headers():
     headers = Headers({'Link': 'test'})
     assert list(headers.items()) == [('Link', 'test')]

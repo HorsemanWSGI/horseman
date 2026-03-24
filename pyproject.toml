@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "horseman"
-version = "1.0a1"
+version = "1.0a2"
 license = {text = "BSD-3-Clause"}
 authors = [{name = "Souheil Chelfouh", email = "trollfot@gmail.com"}]
 maintainers = [{name = "Souheil Chelfouh", email = "trollfot@gmail.com"}]
@@ -24,7 +24,7 @@ requires-python = ">=3.11"
 dependencies = [
   "biscuits>=0.3.2",
   "frozendict>=2.4",
-  "multidict>=6.7",
+  "multidict>=6.0",
   "multifruits>=0.1.7",
   "orjson>=3.11"
 ]

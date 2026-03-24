@@ -24,10 +24,11 @@ class Headers(CIMultiDict[str]):
     _cookies: Cookies
 
     def __new__(cls, *args, **kwargs):
-        if not kwargs and len(args) == 1 and isinstance(args[0], cls):
-            return args[0]
         inst = super().__new__(cls, *args, **kwargs)
-        inst._cookies = None
+        if not kwargs and len(args) == 1 and isinstance(args[0], cls):
+            inst._cookies = args[0]._cookies
+        else:
+            inst._cookies = None
         return inst
 
     @property
