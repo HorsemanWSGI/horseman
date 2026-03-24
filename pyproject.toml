@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "horseman"
+version = "1.0a1"
+license = {text = "BSD-3-Clause"}
+authors = [{name = "Souheil Chelfouh", email = "trollfot@gmail.com"}]
+maintainers = [{name = "Souheil Chelfouh", email = "trollfot@gmail.com"}]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Web Environment",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Internet :: WWW/HTTP :: WSGI"
+]
+description = "Toolkit to build headless WSGI applications."
+readme = {file = "README.rst", content-type = "text/x-rst"}
+requires-python = ">=3.11"
+dependencies = [
+  "biscuits>=0.3.2",
+  "frozendict>=2.4",
+  "multidict>=6.7",
+  "multifruits>=0.1.7",
+  "orjson>=3.11"
+]
+
+[project.urls]
+"Source Code" = "https://github.com/HorsemanWSGI/horseman"
+
+[project.optional-dependencies]
+test = ["WebTest", "pyhamcrest", "pytest"]
