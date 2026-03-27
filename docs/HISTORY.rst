@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.0a5 (2026-03-27)
+------------------
+
+  * Fixed default value when calling `Query.get`.
+
+
 1.0a4 (2026-03-24)
 ------------------
 

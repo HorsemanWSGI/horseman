@@ -9,6 +9,14 @@ def test_query():
     assert len(q) == 0
 
 
+def test_query_default_value():
+    request = Request.blank(f'/?key=abc', method='GET')
+    query = Query.from_string(request.environ['QUERY_STRING'])
+    assert query.get('key', default="test") == "abc"
+    assert query.get('unknown', default="def") == "def"
+    assert query.get('whatever') is None
+
+
 def test_float_should_cast_to_float():
     request = Request.blank('/?key=1', method='GET')
     query = Query.from_string(request.environ['QUERY_STRING'])

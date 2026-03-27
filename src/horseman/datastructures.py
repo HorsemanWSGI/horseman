@@ -93,7 +93,7 @@ class Query(frozendict[str, t.Sequence[str]]):
     def get(self, name: str, default=None):
         """Return the first value of the found list.
         """
-        return super().get(name, [None])[0]
+        return super().get(name, [default])[0]
 
     def getlist(self, name: str) -> t.Sequence[str]:
         """Return the value list
