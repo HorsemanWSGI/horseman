@@ -1,2 +1,0 @@
-kettu@git+https://github.com/WolfSGI/kettu.git
--e .[test]
