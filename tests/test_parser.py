@@ -1,8 +1,9 @@
 import pytest
 from io import BytesIO
-from horseman.exceptions import HTTPError
-from horseman.datastructures import Data, ContentType
-from horseman.parsers.parser import BodyParser
+from kettu.exceptions import HTTPError
+from kettu.headers import ContentType
+from kettu.datastructures import Data
+from horseman.parsers import BodyParser
 
 
 def test_parser_invalid_registration():
@@ -50,7 +51,7 @@ def test_unknown_parser():
         parser.parse(BytesIO(b'body'), 'foo/bar')
 
     assert exc.value.status == 400
-    assert exc.value.body == "Unknown content type: 'foo/bar'."
+    assert exc.value.body == b"Unknown content type: 'foo/bar'."
 
     @parser.register('foo/bar')
     def test(body, mimetype, **options):
@@ -65,7 +66,7 @@ def test_unknown_parser():
 
 def test_parser_with_mimetype():
     parser = BodyParser()
-    contenttype = ContentType('foo/bar')
+    contenttype = ContentType('foo/bar', options={})
 
     @parser.register('foo/bar')
     def test(body, mimetype, **options):

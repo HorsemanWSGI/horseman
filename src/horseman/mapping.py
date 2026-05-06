@@ -3,22 +3,23 @@ import typing as t
 from pathlib import PurePosixPath
 from abc import ABC, abstractmethod
 from collections import UserDict
-from horseman.exceptions import HTTPError
+from kettu.exceptions import HTTPError
+from horseman.abc.response import ResponseProtocol
 from horseman.response import Response
 from horseman.types import (
-    WSGICallable, Environ, StartResponse, ExceptionInfo)
+    WSGICallable, WSGIEnviron, StartResponse, ExceptionInfo)
 
 
 class Node(ABC):
 
     @abstractmethod
-    def resolve(self, environ: Environ) -> WSGICallable:
+    def resolve(self, environ: WSGIEnviron) -> WSGICallable:
         pass
 
 
 class RootNode(Node):
 
-    def handle_exception(self, exc_info: ExceptionInfo, environ: Environ):
+    def handle_exception(self, exc_info: ExceptionInfo, environ: WSGIEnviron):
         """This method handles exceptions happening while the
         application is trying to render/process/interpret the request.
         """
@@ -26,7 +27,7 @@ class RootNode(Node):
         if isinstance(exc, HTTPError):
             return Response(exc.status, body=exc.body)
 
-    def __call__(self, environ: Environ, start_response: StartResponse):
+    def __call__(self, environ: WSGIEnviron, start_response: StartResponse):
         iterable = None
         try:
             iterable = self.resolve(environ)
@@ -54,7 +55,7 @@ class Mapping(RootNode, UserDict, t.Mapping[str, WSGICallable]):
     def __setitem__(self, path: str, script: WSGICallable):
         super().__setitem__(str('/' / PurePosixPath(path)), script)
 
-    def resolve(self, environ: Environ) -> WSGICallable:
+    def resolve(self, environ: WSGIEnviron) -> WSGICallable:
         uri = PurePosixPath(environ.get('PATH_INFO', '/'))
         for current in (uri, *uri.parents):
             if (script := self.get(str(current))) is not None:

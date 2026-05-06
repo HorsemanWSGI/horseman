@@ -1,8 +1,8 @@
 import pytest
 import webtest
+from kettu.exceptions import HTTPError
 from horseman.mapping import Mapping
 from horseman.response import Response
-from horseman.exceptions import HTTPError
 
 
 def basic_app(environ, start_fn):

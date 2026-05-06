@@ -2,7 +2,7 @@ import pytest
 from io import BytesIO
 from webtest.app import TestApp as App
 from horseman.parsers import parser
-from horseman.exceptions import HTTPError
+from kettu.exceptions import HTTPError
 
 
 BAD_MULTIPART = (
@@ -126,13 +126,13 @@ def test_wrong_multipart():
     with pytest.raises(HTTPError) as exc:
         parser.parse(BytesIO(b'test'), "multipart/form-data")
     assert exc.value.status == 400
-    assert exc.value.body == 'Missing boundary in Content-Type.'
+    assert exc.value.body == b'Missing boundary in Content-Type.'
 
     with pytest.raises(HTTPError) as exc:
         parser.parse(BytesIO(BAD_MULTIPART),
                "multipart/form-data; boundary=--foo")
     assert exc.value.status == 400
-    assert exc.value.body == 'Unparsable multipart body.'
+    assert exc.value.body == b'Unparsable multipart body.'
 
 
 def test_wrong_multipart_no_content_disposition():
@@ -143,4 +143,4 @@ def test_wrong_multipart_no_content_disposition():
                'boundary=----------a_BoUnDaRy7283067873172754$')
 
     assert exc.value.status == 400
-    assert exc.value.body == ('Unparsable multipart body.')
+    assert exc.value.body == (b'Unparsable multipart body.')

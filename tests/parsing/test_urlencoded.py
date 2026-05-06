@@ -1,6 +1,7 @@
 import pytest
 from io import BytesIO
-from horseman.parsers import Data, urlencoded_parser
+from kettu.datastructures import Data
+from horseman.parsers import urlencoded_parser
 
 
 def test_empty_urlencoded():
